@@ -11,6 +11,8 @@ export interface Market {
   outcomes: Outcome[]
   volume: string
   tag?: string
+  startTime?: number
+  endTime?: number
 }
 
 export const mockMarkets: Market[] = [

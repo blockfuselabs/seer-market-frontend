@@ -85,7 +85,9 @@ export function useMarket(marketId: string) {
             description: metadata?.description || "",
             resolutionSource: metadata?.resolutionSource || "",
             startDate: data[4] ? new Date(Number(data[4]) * 1000).toLocaleString() : "",
-            endDate: data[5] ? new Date(Number(data[5]) * 1000).toLocaleString() : ""
+            endDate: data[5] ? new Date(Number(data[5]) * 1000).toLocaleString() : "",
+            startTime: data[4] ? Number(data[4]) : undefined,
+            endTime: data[5] ? Number(data[5]) : undefined
         } as Market & { description?: string, resolutionSource?: string, startDate?: string, endDate?: string }
     }
 

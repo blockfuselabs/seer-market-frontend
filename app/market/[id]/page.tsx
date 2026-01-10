@@ -7,6 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { TradingForm } from "@/components/trading-form"
 import { MarketResolution } from "@/components/market-resolution"
+import { MarketTimer } from "@/components/market-timer"
 
 export default function EventPage() {
     const params = useParams()
@@ -74,10 +75,12 @@ export default function EventPage() {
                                     <span className="text-muted-foreground">End Date</span>
                                     <span>{market.endDate}</span>
                                 </div>
+                                <div className="pt-2 flex justify-center">
+                                    <MarketTimer endTime={market.endTime} />
+                                </div>
                             </div>
                         </div>
                     </div>
-
 
                     {/* Right Column: Trading Interface */}
                     <div className="w-full md:w-80 space-y-4">
