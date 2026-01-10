@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { MoreVertical } from "lucide-react"
 import type { Market } from "@/lib/mock-data"
+import { MarketTimer } from "./market-timer"
 
 interface MarketCardProps {
   market: Market
@@ -46,6 +47,11 @@ export default function MarketCard({ market }: MarketCardProps) {
           {/* Footer */}
           <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
             <span className="text-xs text-muted-foreground">${market.volume}m Vol.</span>
+            {market.endTime && (
+              <div className="scale-75 origin-right">
+                <MarketTimer endTime={market.endTime} />
+              </div>
+            )}
             {market.tag && <span className="text-xs text-muted-foreground">{market.tag}</span>}
           </div>
         </div>

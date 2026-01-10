@@ -96,6 +96,8 @@ export function useMarkets() {
         const data = result.result as any
         const question = data[8] || data.question
         const cId = data[9] || data.cId
+        const startTime = data[4] ? Number(data[4]) : undefined
+        const endTime = data[5] ? Number(data[5]) : undefined
 
         // Parse price
         // Use the original index because pricesData matches marketsData array order
@@ -133,6 +135,8 @@ export function useMarkets() {
             ],
             volume: "0",
             tag: "",
+            startTime,
+            endTime,
         }
     }).filter((m): m is Market => m !== null) || []
 
