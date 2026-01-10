@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract, useSimulateContract } from "wagmi"
-import { parseEther, type Address } from "viem"
+import { parseEther, parseUnits, type Address } from "viem"
 import { CONTRACT_ADDRESS, USDC_ADDRESS } from "@/lib/constants"
 import LMSRABI from "@/lib/LMSRABI.json"
 import { ERC20ABI } from "@/lib/erc20-abi"
@@ -182,7 +182,7 @@ export function MarketCreationForm() {
                 abi: LMSRABI,
                 functionName: 'createMarket',
                 args: [
-                    parseEther(values.liquidity.toString()), // _b
+                    parseUnits(values.liquidity.toString(), 6), // _b
                     BigInt(startTime),
                     BigInt(endTime),
                     values.question,
