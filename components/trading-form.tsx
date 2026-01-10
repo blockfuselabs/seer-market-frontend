@@ -117,6 +117,7 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
                 <Input
                     type="number"
                     placeholder="Amount (USDC)"
+                    className="border border-muted-foreground/20 rounded-lg p-2"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     disabled={isPending}
