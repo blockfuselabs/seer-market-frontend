@@ -98,8 +98,11 @@ export function useMarkets() {
         const cId = data[9] || data.cId
 
         // Parse price
-        const priceResult = pricesData?.[index]
+        // Use the original index because pricesData matches marketsData array order
+        const originalIndex = index - 1
+        const priceResult = pricesData?.[originalIndex]
         let probability = 50
+        console.log('Price Result', priceResult)
         if (priceResult?.status === "success") {
             const priceWei = priceResult.result as bigint
             probability = parseFloat(formatEther(priceWei)) * 100
