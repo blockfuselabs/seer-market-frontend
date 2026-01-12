@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Search, Trophy } from "lucide-react"
+import { Search, Trophy, Menu, Home, PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 import { useUserRights } from "@/hooks/useUserRights"
 
@@ -16,10 +17,10 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Trophy className="h-5 w-5" />
+          <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Trophy className="h-4 w-4 md:h-5 md:w-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">Precast</span>
+          <span className="text-lg md:text-xl font-bold tracking-tight text-foreground">Precast</span>
         </Link>
 
         {/* Search Bar - Hidden on mobile, distinct on desktop */}
@@ -35,8 +36,8 @@ export default function Header() {
         </div>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
+        <div className="ml-auto flex items-center gap-2 md:gap-3">
+          <ThemeToggle className="h-8 w-8 md:h-9 md:w-9" />
 
           {isConnected && hasCreationRights && (
             <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex border-border hover:bg-secondary hover:text-foreground">
@@ -119,10 +120,10 @@ export default function Header() {
                         </button>
                         <button
                           onClick={openAccountModal}
-                          className="flex items-center gap-2 rounded-lg border border-border bg-secondary pl-2 pr-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary/80"
+                          className="flex items-center gap-2 rounded-lg border border-border bg-secondary pl-2 pr-3 py-1 md:py-1.5 text-xs md:text-sm font-medium transition-colors hover:bg-secondary/80"
                           type="button"
                         >
-                          <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
+                          <div className="h-4 w-4 md:h-5 md:w-5 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
                           {account.displayName}
                         </button>
                       </div>
@@ -132,10 +133,39 @@ export default function Header() {
               );
             }}
           </ConnectButton.Custom>
+
+          {/* Mobile Hamburger Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden text-foreground">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] border-l border-border bg-card">
+              <SheetHeader>
+                <SheetTitle className="text-left flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <span className="font-bold">Precast</span>
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-8 flex flex-col gap-4">
+                <Link href="/" className="flex items-center gap-3 px-4 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
+                  <Home className="h-5 w-5" />
+                  <span className="font-medium">Home</span>
+                </Link>
+                {isConnected && hasCreationRights && (
+                  <Link href="/create-market" className="flex items-center gap-3 px-4 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
+                    <PlusCircle className="h-5 w-5" />
+                    <span className="font-medium">Create Market</span>
+                  </Link>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
-      {/* Mobile Search - Visible only on mobile */}
       <div className="border-t border-border px-4 py-3 md:hidden bg-background/95 backdrop-blur-xl">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
