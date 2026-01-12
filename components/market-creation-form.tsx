@@ -209,44 +209,48 @@ export function MarketCreationForm() {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.error("Form Validation Errors:", errors))} className="space-y-8">
-                <FormField
-                    control={form.control}
-                    name="question"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Question</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Will BTC hit $100k by 2025?" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Provide more details about the market..." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Section 1: Basic Info */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-white/5 pb-2 text-white">1. Market Details</h3>
+                    <FormField
+                        control={form.control}
+                        name="question"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Question</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. Will BTC hit $100k by 2025?" {...field} className="bg-white/5 border-white/10" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Provide context and resolution criteria..." {...field} className="min-h-[100px] bg-white/5 border-white/10" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <FormField
                         control={form.control}
                         name="image"
                         render={({ field: { value, onChange, ...fieldProps } }) => (
                             <FormItem>
-                                <FormLabel>Image</FormLabel>
+                                <FormLabel>Market Image</FormLabel>
                                 <FormControl>
                                     <Input
                                         {...fieldProps}
                                         type="file"
                                         accept="image/*"
+                                        className="bg-white/5 border-white/10 cursor-pointer file:cursor-pointer file:text-primary file:border-0 file:bg-transparent file:font-semibold"
                                         onChange={(event) => {
                                             const file = event.target.files && event.target.files[0];
                                             if (file) {
@@ -259,21 +263,57 @@ export function MarketCreationForm() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="resolutionSource"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Resolution Source</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g. Binance API, CoinGecko" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* Section 2: Resolution & Timeline */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-white/5 pb-2 text-white">2. Resolution & Timeline</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="resolutionSource"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Resolution Source</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. Binance API, CoinGecko" {...field} className="bg-white/5 border-white/10" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="startDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Start Date</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" {...field} className="bg-white/5 border-white/10" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="endDate"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>End Date</FormLabel>
+                                    <FormControl>
+                                        <Input type="datetime-local" {...field} className="bg-white/5 border-white/10" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+
+                {/* Section 3: Funding */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-white/5 pb-2 text-white">3. Liquidity</h3>
                     <FormField
                         control={form.control}
                         name="liquidity"
@@ -281,60 +321,36 @@ export function MarketCreationForm() {
                             <FormItem>
                                 <FormLabel>Initial Liquidity (USDC)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" {...field} />
+                                    <Input type="number" {...field} className="bg-white/5 border-white/10" />
                                 </FormControl>
-                                <FormDescription>Higher liquidity means less slippage.</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="startDate"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Start Date</FormLabel>
-                                <FormControl>
-                                    <Input type="datetime-local" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="endDate"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>End Date</FormLabel>
-                                <FormControl>
-                                    <Input type="datetime-local" {...field} />
-                                </FormControl>
+                                <FormDescription>Higher liquidity means less slippage for traders.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
                 </div>
 
-                {isAllowanceSufficient ? (
-                    <Button type="submit" disabled={isCreatePending || isConfirmingCreate} className="w-full">
-                        {isCreatePending ? "Confirming..." : isConfirmingCreate ? "Processing..." : "Create Market"}
-                    </Button>
-                ) : (
-                    <Button
-                        type="button"
-                        onClick={handleApprove}
-                        disabled={isApprovePending || isConfirmingApprove}
-                        className="w-full bg-primary"
-                        variant="secondary"
-                    >
-                        {isApprovePending ? "Confirming Approval..." : isConfirmingApprove ? "Processing Approval..." : "Approve USDC"}
-                    </Button>
-                )}
+                <div className="pt-4">
+                    {isAllowanceSufficient ? (
+                        <Button type="submit" disabled={isCreatePending || isConfirmingCreate} className="w-full text-base font-semibold h-12">
+                            {isCreatePending ? "Confirming..." : isConfirmingCreate ? "Processing..." : "Create Market"}
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            onClick={handleApprove}
+                            disabled={isApprovePending || isConfirmingApprove}
+                            className="w-full font-semibold h-12 bg-primary text-primary-foreground hover:bg-primary/90"
+                            variant="secondary"
+                        >
+                            {isApprovePending ? "Confirming Approval..." : isConfirmingApprove ? "Processing Approval..." : "Approve USDC"}
+                        </Button>
+                    )}
+                </div>
 
-                {hash && <div className="text-sm text-muted-foreground break-all">Create Tx: {hash}</div>}
-                {approveHash && <div className="text-sm text-muted-foreground break-all">Approve Tx: {approveHash}</div>}
-                {isConfirmedCreate && <div className="text-sm text-green-500 font-medium">Market Created Successfully!</div>}
+                {hash && <div className="p-3 rounded bg-green-500/10 border border-green-500/20 text-xs text-green-400 break-all">Create Tx: {hash}</div>}
+                {approveHash && <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 break-all">Approve Tx: {approveHash}</div>}
+                {isConfirmedCreate && <div className="text-center text-green-500 font-bold text-lg">Market Created Successfully!</div>}
             </form>
         </Form>
     )

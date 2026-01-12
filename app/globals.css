@@ -136,3 +136,17 @@
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+@layer utilities {
+  .glass {
+    @apply bg-background/60 backdrop-blur-xl border-b border-white/5;
+  }
+  
+  .glass-card {
+    @apply bg-card/40 backdrop-blur-md border border-white/5 shadow-xl;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(var(--primary), 0.5);
+  }
+}
