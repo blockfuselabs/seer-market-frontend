@@ -8,11 +8,10 @@ import { Loader2 } from "lucide-react"
 export default function Home() {
   const { markets, isLoading } = useMarkets()
 
-  const featuredMarkets = markets.slice(0, 3);
-  const allMarkets = markets; // In a real app, this might be paginated or different
+  const allMarkets = markets;
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 flex flex-col">
       <Header />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -23,22 +22,12 @@ export default function Home() {
           </div>
         )}
 
-        {/* Hero / Trending Section */}
-        {!isLoading && markets.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                <span className="text-primary">🔥</span> Trending
-              </h2>
-            </div>
-            <MarketGrid markets={featuredMarkets} columns={3} />
-          </section>
-        )}
-
         {/* All Markets Section */}
         {!isLoading && markets.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">All Markets</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">All Markets</h2>
+            </div>
             <MarketGrid markets={allMarkets} />
           </section>
         )}
@@ -58,7 +47,7 @@ export default function Home() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="mt-auto border-t border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/20 py-8 backdrop-blur-lg">
+      <footer className="mt-auto border-t border-black/5 dark:border-white/10 bg-white/50 dark:bg-black/20 py-4 backdrop-blur-lg">
         <div className="container mx-auto max-w-7xl px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>Precast Inc. © 2026. All rights reserved.</p>
           <div className="flex gap-6">
