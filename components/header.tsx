@@ -50,6 +50,7 @@ export default function Header() {
 
           {/* Privy Login/Logout */}
           {!authenticated ? (
+            <>
             <Button 
               onClick={login} 
               disabled={disableLogin}
@@ -58,6 +59,15 @@ export default function Header() {
             >
               Login
             </Button>
+             <Button 
+              onClick={login} 
+              disabled={disableLogin}
+              size="sm" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-none"
+            >
+              Signup
+            </Button>
+            </>
           ) : (
             <div className="flex items-center gap-2">
               {/* User Info */}
