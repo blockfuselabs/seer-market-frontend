@@ -18,7 +18,7 @@ export default function MarketCard({ market }: MarketCardProps) {
       <div className="relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all hover:border-sidebar-primary/50 hover:shadow-md hover:shadow-primary/5 backdrop-blur-sm">
 
         {/* Card Header: Image & Title */}
-        <div className="flex items-start gap-2.5 p-2.5">
+        <div className="flex items-start gap-2.5 p-4">
           <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
             <img
               src={market.image}
@@ -27,7 +27,7 @@ export default function MarketCard({ market }: MarketCardProps) {
             />
           </div>
           <div className="flex-1 min-w-0 pt-0.5">
-            <h3 className="line-clamp-2 text-xs font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+            <h3 className="line-clamp-2 text-base font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
               {market.title}
             </h3>
             <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">

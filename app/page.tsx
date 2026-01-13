@@ -10,13 +10,13 @@ export default function Home() {
 
   const allMarkets = markets;
 
+  console.log(markets)
+
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 flex flex-col">
-      {/* Carbon Theme Active */}
       <Header />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        {/* Loading State */}
         {isLoading && (
           <div className="flex h-[50vh] w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
