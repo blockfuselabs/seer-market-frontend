@@ -21,7 +21,7 @@ export default function MarketGrid({ markets, columns, className }: MarketGridPr
     : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 
   return (
-    <div className={cn("grid gap-4 md:gap-6", gridCols, className)}>
+    <div className={cn("grid gap-2 md:gap-3", gridCols, className)}>
       {markets.map((market) => (
         <MarketCard key={market.id} market={market} />
       ))}
