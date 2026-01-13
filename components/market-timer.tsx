@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Clock } from "lucide-react"
 
 interface MarketTimerProps {
     endTime?: number
@@ -49,9 +48,12 @@ export function MarketTimer({ endTime }: MarketTimerProps) {
 
     if (isExpired) {
         return (
-            <div className="flex items-center gap-2 text-destructive font-semibold bg-destructive/10 px-3 py-1.5 rounded-full">
-                <Clock className="w-4 h-4" />
-                <span>Market Expired</span>
+            <div className="flex items-center gap-1.5 text-[10px] text-destructive font-medium">
+                <div className="relative flex items-center justify-center">
+                    <div className="absolute h-2 w-2 rounded-full bg-destructive animate-ping opacity-75" />
+                    <div className="relative h-2 w-2 rounded-full bg-destructive" />
+                </div>
+                <span>Expired</span>
             </div>
         )
     }
@@ -59,13 +61,15 @@ export function MarketTimer({ endTime }: MarketTimerProps) {
     if (!timeLeft) return null
 
     return (
-        <div className="flex items-center gap-2 text-orange-500 font-semibold bg-orange-500/10 px-3 py-1.5 rounded-full">
-            <Clock className="w-4 h-4" />
-            <div className="flex gap-1 text-sm">
-                <span>{timeLeft.days}d</span>
+        <div className="flex items-center gap-1.5 text-[11px] text-black dark:text-white font-medium">
+            <div className="relative flex items-center justify-center">
+                <div className="absolute h-2 w-2 rounded-full bg-red-600 dark:bg-red-400 animate-ping opacity-75" />
+                <div className="relative h-2 w-2 rounded-full bg-red-600 dark:bg-red-400" />
+            </div>
+            <div className="flex gap-0.5">
+                {timeLeft.days > 0 && <span>{timeLeft.days}d</span>}
                 <span>{timeLeft.hours}h</span>
                 <span>{timeLeft.minutes}m</span>
-                <span className="w-5 text-center">{timeLeft.seconds}s</span>
             </div>
         </div>
     )

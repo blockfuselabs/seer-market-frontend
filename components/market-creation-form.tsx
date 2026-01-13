@@ -84,6 +84,21 @@ export function MarketCreationForm() {
     })
 
     const liquidity = form.watch("liquidity")
+    const imageFile = form.watch("image")
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+    // Handle image preview
+    useEffect(() => {
+        if (imageFile instanceof File) {
+            const previewUrl = URL.createObjectURL(imageFile)
+            setImagePreview(previewUrl)
+            return () => {
+                URL.revokeObjectURL(previewUrl)
+            }
+        } else {
+            setImagePreview(null)
+        }
+    }, [imageFile])
 
     // Check Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -263,6 +278,15 @@ export function MarketCreationForm() {
                                         }}
                                     />
                                 </FormControl>
+                                {imagePreview && (
+                                    <div className="mt-3">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="rounded-lg border border-border max-w-full h-auto max-h-64 object-contain"
+                                        />
+                                    </div>
+                                )}
                                 <FormMessage />
                             </FormItem>
                         )}
