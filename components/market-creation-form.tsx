@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/lib/ipfs"
 import { useEffect, useState } from "react"
@@ -36,6 +37,10 @@ const formSchema = z.object({
     image: z.any().refine((file) => file instanceof File || (typeof file !== 'string'), {
         message: "Image file is required.",
     }),
+    category: z.string().min(1, {
+        message: "Category is required.",
+    }),
+    customCategory: z.string().optional(),
     resolutionSource: z.string().min(3, {
         message: "Resolution source is required.",
     }),
@@ -55,6 +60,14 @@ const formSchema = z.object({
 }).refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date.",
     path: ["endDate"],
+}).refine((data) => {
+    if (data.category === "Other") {
+        return data.customCategory && data.customCategory.trim().length > 0;
+    }
+    return true;
+}, {
+    message: "Custom category is required when 'Other' is selected.",
+    path: ["customCategory"],
 });
 
 export function MarketCreationForm() {
@@ -76,6 +89,8 @@ export function MarketCreationForm() {
         defaultValues: {
             question: "",
             description: "",
+            category: "",
+            customCategory: "",
             resolutionSource: "",
             liquidity: 100,
             // startDate: undefined, // removed default string
@@ -167,6 +182,7 @@ export function MarketCreationForm() {
                 question: values.question,
                 description: values.description,
                 image: `ipfs://${imageCid}`,
+                category: values.category === "Other" && values.customCategory ? values.customCategory : values.category,
                 resolutionSource: values.resolutionSource
             };
 
@@ -258,6 +274,57 @@ export function MarketCreationForm() {
                             </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Category</FormLabel>
+                                <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (value !== "Other") {
+                                        form.setValue("customCategory", "");
+                                    }
+                                }} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger className="bg-secondary border-border text-foreground w-full">
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="Crypto">Crypto</SelectItem>
+                                        <SelectItem value="Politics">Politics</SelectItem>
+                                        <SelectItem value="Sports">Sports</SelectItem>
+                                        <SelectItem value="Entertainment">Entertainment</SelectItem>
+                                        <SelectItem value="Technology">Technology</SelectItem>
+                                        <SelectItem value="Economics">Economics</SelectItem>
+                                        <SelectItem value="World Events">World Events</SelectItem>
+                                        <SelectItem value="Other">Other (Custom)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    {form.watch("category") === "Other" && (
+                        <FormField
+                            control={form.control}
+                            name="customCategory"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Custom Category</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            placeholder="Enter your custom category" 
+                                            {...field} 
+                                            className="bg-secondary border-border text-foreground focus:ring-primary" 
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
                     <FormField
                         control={form.control}
                         name="image"

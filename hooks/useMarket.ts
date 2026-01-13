@@ -84,6 +84,7 @@ export function useMarket(marketId: string) {
             tag: "Crypto", // Placeholder
             description: metadata?.description || "",
             resolutionSource: metadata?.resolutionSource || "",
+            category: metadata?.category || "General",
             startDate: data[4] ? new Date(Number(data[4]) * 1000).toLocaleString() : "",
             endDate: data[5] ? new Date(Number(data[5]) * 1000).toLocaleString() : "",
             startTime: data[4] ? Number(data[4]) : undefined,

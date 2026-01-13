@@ -80,6 +80,10 @@ export default function EventPage() {
                                 <h3 className="text-lg font-semibold mb-4 text-foreground">Market Rules</h3>
                                 <dl className="space-y-4 text-sm">
                                     <div className="flex justify-between border-b border-border pb-2">
+                                        <dt className="text-muted-foreground">Category</dt>
+                                        <dd className="font-medium text-foreground">{market.category || "General"}</dd>
+                                    </div>
+                                    <div className="flex justify-between border-b border-border pb-2">
                                         <dt className="text-muted-foreground">Resolution Source</dt>
                                         <dd className="font-medium text-foreground">{market.resolutionSource || "Oracle"}</dd>
                                     </div>

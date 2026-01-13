@@ -19,4 +19,5 @@ export interface Market {
     resolutionSource?: string
     startDate?: string
     endDate?: string
+    category?: string
 }
