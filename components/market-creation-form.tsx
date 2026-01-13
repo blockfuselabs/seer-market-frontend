@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { uploadFileToIPFS, uploadJSONToIPFS } from "@/lib/ipfs"
 import { useEffect, useState } from "react"
+import { DateTimePicker } from "@/components/ui/datetime-picker"
 
 const formSchema = z.object({
     question: z.string().min(10, {
@@ -41,13 +42,17 @@ const formSchema = z.object({
     liquidity: z.coerce.number().min(1, {
         message: "Initial liquidity must be at least 1.",
     }),
-    startDate: z.string().refine((date) => new Date(date) > new Date(), {
+    startDate: z.date({
+        required_error: "Start date is required.",
+    }).refine((date) => date > new Date(), {
         message: "Start date must be in the future.",
     }),
-    endDate: z.string().refine((date) => new Date(date) > new Date(), {
+    endDate: z.date({
+        required_error: "End date is required.",
+    }).refine((date) => date > new Date(), {
         message: "End date must be in the future.",
     }),
-}).refine((data) => new Date(data.endDate) > new Date(data.startDate), {
+}).refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date.",
     path: ["endDate"],
 });
@@ -73,8 +78,8 @@ export function MarketCreationForm() {
             description: "",
             resolutionSource: "",
             liquidity: 100,
-            startDate: "",
-            endDate: "",
+            // startDate: undefined, // removed default string
+            // endDate: undefined,
         },
     })
 
@@ -166,10 +171,9 @@ export function MarketCreationForm() {
             toast.success("Metadata uploaded! Creating market...");
 
             // 3. Create Market
-            // Ensure startTime is not in the past relative to block time. 
-            // Add 60s buffer if it's very close to now or mistakenly in past.
-            let startTime = Math.floor(new Date(values.startDate).getTime() / 1000)
-            const endTime = Math.floor(new Date(values.endDate).getTime() / 1000)
+            // Dates are already Date objects
+            let startTime = Math.floor(values.startDate.getTime() / 1000)
+            const endTime = Math.floor(values.endDate.getTime() / 1000)
             const now = Math.floor(Date.now() / 1000)
 
             if (startTime <= now) {
@@ -209,44 +213,48 @@ export function MarketCreationForm() {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit, (errors) => console.error("Form Validation Errors:", errors))} className="space-y-8">
-                <FormField
-                    control={form.control}
-                    name="question"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Question</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Will BTC hit $100k by 2025?" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                                <Textarea placeholder="Provide more details about the market..." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Section 1: Basic Info */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2 text-foreground">1. Market Details</h3>
+                    <FormField
+                        control={form.control}
+                        name="question"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Question</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="e.g. Will BTC hit $100k by 2025?" {...field} className="bg-secondary border-border text-foreground focus:ring-primary" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="Provide context and resolution criteria..." {...field} className="min-h-[100px] bg-secondary border-border text-foreground" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <FormField
                         control={form.control}
                         name="image"
                         render={({ field: { value, onChange, ...fieldProps } }) => (
                             <FormItem>
-                                <FormLabel>Image</FormLabel>
+                                <FormLabel>Market Image</FormLabel>
                                 <FormControl>
                                     <Input
                                         {...fieldProps}
                                         type="file"
                                         accept="image/*"
+                                        className="bg-secondary border-border cursor-pointer file:cursor-pointer file:text-primary file:border-0 file:bg-transparent file:font-semibold text-foreground"
                                         onChange={(event) => {
                                             const file = event.target.files && event.target.files[0];
                                             if (file) {
@@ -259,21 +267,59 @@ export function MarketCreationForm() {
                             </FormItem>
                         )}
                     />
-                    <FormField
-                        control={form.control}
-                        name="resolutionSource"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Resolution Source</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g. Binance API, CoinGecko" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* Section 2: Resolution & Timeline */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2 text-foreground">2. Resolution & Timeline</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                            control={form.control}
+                            name="resolutionSource"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Resolution Source</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. Binance API, CoinGecko" {...field} className="bg-secondary border-border text-foreground" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="startDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>Start Date</FormLabel>
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
+                                    />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="endDate"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col">
+                                    <FormLabel>End Date</FormLabel>
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
+                                    />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+
+                {/* Section 3: Funding */}
+                <div className="space-y-4">
+                    <h3 className="text-lg font-semibold border-b border-border pb-2 text-foreground">3. Liquidity</h3>
                     <FormField
                         control={form.control}
                         name="liquidity"
@@ -281,60 +327,36 @@ export function MarketCreationForm() {
                             <FormItem>
                                 <FormLabel>Initial Liquidity (USDC)</FormLabel>
                                 <FormControl>
-                                    <Input type="number" {...field} />
+                                    <Input type="number" {...field} className="bg-secondary border-border text-foreground" />
                                 </FormControl>
-                                <FormDescription>Higher liquidity means less slippage.</FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="startDate"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Start Date</FormLabel>
-                                <FormControl>
-                                    <Input type="datetime-local" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="endDate"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>End Date</FormLabel>
-                                <FormControl>
-                                    <Input type="datetime-local" {...field} />
-                                </FormControl>
+                                <FormDescription>Higher liquidity means less slippage for traders.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
                     />
                 </div>
 
-                {isAllowanceSufficient ? (
-                    <Button type="submit" disabled={isCreatePending || isConfirmingCreate} className="w-full">
-                        {isCreatePending ? "Confirming..." : isConfirmingCreate ? "Processing..." : "Create Market"}
-                    </Button>
-                ) : (
-                    <Button
-                        type="button"
-                        onClick={handleApprove}
-                        disabled={isApprovePending || isConfirmingApprove}
-                        className="w-full bg-primary"
-                        variant="secondary"
-                    >
-                        {isApprovePending ? "Confirming Approval..." : isConfirmingApprove ? "Processing Approval..." : "Approve USDC"}
-                    </Button>
-                )}
+                <div className="pt-4">
+                    {isAllowanceSufficient ? (
+                        <Button type="submit" disabled={isCreatePending || isConfirmingCreate} className="w-full text-base font-semibold h-12">
+                            {isCreatePending ? "Confirming..." : isConfirmingCreate ? "Processing..." : "Create Market"}
+                        </Button>
+                    ) : (
+                        <Button
+                            type="button"
+                            onClick={handleApprove}
+                            disabled={isApprovePending || isConfirmingApprove}
+                            className="w-full font-semibold h-12 bg-emerald-600 text-white hover:bg-emerald-700"
+                            variant="default"
+                        >
+                            {isApprovePending ? "Confirming Approval..." : isConfirmingApprove ? "Processing Approval..." : "Approve USDC"}
+                        </Button>
+                    )}
+                </div>
 
-                {hash && <div className="text-sm text-muted-foreground break-all">Create Tx: {hash}</div>}
-                {approveHash && <div className="text-sm text-muted-foreground break-all">Approve Tx: {approveHash}</div>}
-                {isConfirmedCreate && <div className="text-sm text-green-500 font-medium">Market Created Successfully!</div>}
+                {hash && <div className="p-3 rounded bg-green-500/10 border border-green-500/20 text-xs text-green-400 break-all">Create Tx: {hash}</div>}
+                {approveHash && <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 break-all">Approve Tx: {approveHash}</div>}
+                {isConfirmedCreate && <div className="text-center text-green-500 font-bold text-lg">Market Created Successfully!</div>}
             </form>
         </Form>
     )

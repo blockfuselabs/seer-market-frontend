@@ -1,58 +1,80 @@
 "use client"
 
 import Link from "next/link"
-import { MoreVertical } from "lucide-react"
+import { ArrowUpRight, TrendingUp } from "lucide-react"
 import type { Market } from "@/lib/mock-data"
-import { MarketTimer } from "./market-timer"
+// import { MarketTimer } from "./market-timer"
 
 interface MarketCardProps {
   market: Market
 }
 
 export default function MarketCard({ market }: MarketCardProps) {
+  const yesOutcome = market.outcomes.find(o => o.name === 'Yes') || market.outcomes[0];
+  const noOutcome = market.outcomes.find(o => o.name === 'No') || market.outcomes[1];
+
   return (
-    <Link href={`/market/${market.id}`} className="block">
-      <div className="group rounded-lg border border-muted-foreground/20 bg-card transition-all hover:border-primary hover:shadow-lg">
-        {/* Image */}
-        {/* Image */}
-        <div className="relative h-40 w-full overflow-hidden rounded-t-lg bg-muted">
-          <img
-            src={market.image}
-            alt={market.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+    <Link href={`/market/${market.id}`} className="group block h-full">
+      <div className="relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all hover:border-sidebar-primary/50 hover:shadow-md hover:shadow-primary/5 backdrop-blur-sm">
+
+        {/* Card Header: Image & Title */}
+        <div className="flex items-start gap-2.5 p-2.5">
+          <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg border border-border bg-secondary">
+            <img
+              src={market.image}
+              alt={market.title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <h3 className="line-clamp-2 text-xs font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+              {market.title}
+            </h3>
+            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted-foreground">
+              {market.tag && <span className="uppercase tracking-wider font-medium opacity-80">{market.tag}</span>}
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          <div className="mb-3 flex items-start justify-between gap-2">
-            <h3 className="flex-1 text-sm font-semibold leading-tight text-foreground">{market.title}</h3>
-            {/* <button className="flex-shrink-0 text-muted-foreground hover:text-foreground">
-            <MoreVertical className="h-4 w-4" />
-          </button> */}
-          </div>
-
-          {/* Binary Market */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded bg-muted p-2">
-              <span className="text-xs font-medium text-foreground">{market.outcomes[0].name}</span>
-              <span className="text-lg font-bold text-primary">{market.outcomes[0].probability}%</span>
-            </div>
-            <div className="flex items-center justify-between rounded bg-muted p-2">
-              <span className="text-xs font-medium text-foreground">{market.outcomes[1].name}</span>
-              <span className="text-lg font-bold text-primary">{market.outcomes[1].probability}%</span>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-            <span className="text-xs text-muted-foreground">${market.volume}m Vol.</span>
-            {market.endTime && (
-              <div className="scale-75 origin-right">
-                <MarketTimer endTime={market.endTime} />
+        {/* Probabilities / Graph Area */}
+        <div className="mt-auto px-2.5 pb-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            {/* Yes Outcome */}
+            <div className="relative flex items-center justify-between overflow-hidden rounded-md bg-emerald-100 dark:bg-emerald-500/10 border border-transparent hover:bg-emerald-200 dark:hover:bg-emerald-500/20 hover:border-emerald-500/20 px-2 py-1 transition-all hover:shadow-sm hover:shadow-emerald-500/5">
+              <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400">Yes</span>
+              <div className="relative flex items-center justify-center">
+                {/* Full Circle Gauge */}
+                <svg viewBox="0 0 36 36" className="h-6 w-6 text-emerald-600 dark:text-emerald-400 -rotate-90">
+                  {/* Background Circle */}
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-10" />
+                  {/* Progress Circle */}
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${yesOutcome.probability}, 100`} strokeLinecap="round" />
+                </svg>
+                <span className="absolute text-[7px] font-bold text-emerald-800 dark:text-emerald-400 leading-none">{yesOutcome.probability}%</span>
               </div>
-            )}
-            {market.tag && <span className="text-xs text-muted-foreground">{market.tag}</span>}
+            </div>
+
+            {/* No Outcome */}
+            <div className="relative flex items-center justify-between overflow-hidden rounded-md bg-red-100 dark:bg-red-500/10 border border-transparent hover:bg-red-200 dark:hover:bg-red-500/20 hover:border-red-500/20 px-2 py-1 transition-all hover:shadow-sm hover:shadow-red-500/5">
+              <span className="text-[10px] font-medium text-red-800 dark:text-red-400">No</span>
+              <div className="relative flex items-center justify-center">
+                {/* Full Circle Gauge */}
+                <svg viewBox="0 0 36 36" className="h-6 w-6 text-red-600 dark:text-red-400 -rotate-90">
+                  {/* Background Circle */}
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-10" />
+                  {/* Progress Circle */}
+                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${noOutcome.probability}, 100`} strokeLinecap="round" />
+                </svg>
+                <span className="absolute text-[7px] font-bold text-red-800 dark:text-red-400 leading-none">{noOutcome.probability}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Volume Footer */}
+          <div className="mt-2.5 flex items-center justify-between text-[10px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 opacity-80">
+              <span>Vol ${market.volume}m</span>
+            </div>
           </div>
         </div>
       </div>

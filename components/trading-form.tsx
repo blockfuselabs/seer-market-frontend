@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { parseUnits, formatUnits, type Address } from "viem"
+import { parseUnits, type Address } from "viem"
 import { CONTRACT_ADDRESS, USDC_ADDRESS } from "@/lib/constants"
 import LMSRABI from "@/lib/LMSRABI.json"
 import { ERC20ABI } from "@/lib/erc20-abi"
@@ -103,37 +103,60 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
             : "Approve USDC"
 
     const isGreen = outcome === "YES"
-    const colorClass = isGreen ? "text-green-500" : "text-red-500"
-    const bgClass = isGreen ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+    const colorClass = isGreen ? "text-emerald-500" : "text-red-500"
+    const bgClass = isGreen ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"
 
     return (
-        <div className={`bg-card border border-muted-foreground/20 rounded-lg p-6 space-y-4`}>
-            <div className="flex justify-between items-center">
-                <span className="font-semibold text-lg">{outcome}</span>
-                <span className={`text-2xl font-bold ${colorClass}`}>{probability}%</span>
+        <div className="space-y-4">
+            {/* Price Display */}
+            <div className="flex justify-between items-end border-b border-border pb-4">
+                <span className="text-sm font-medium text-muted-foreground">Current Price</span>
+                <div className="text-right">
+                    <div className={`text-3xl font-bold ${colorClass}`}>{probability}%</div>
+                    <div className="text-xs text-muted-foreground">1 {outcome} = ${probability / 100}</div>
+                </div>
             </div>
 
-            <div className="space-y-2">
-                <Input
-                    type="number"
-                    placeholder="Amount (USDC)"
-                    className="border border-muted-foreground/20 rounded-lg p-2"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    disabled={isPending}
-                    min={0}
-                />
+            {/* Input Section */}
+            <div className="space-y-3">
+                <div className="relative">
+                    <Input
+                        type="number"
+                        placeholder="0.00"
+                        className="pr-16 text-lg font-medium border-border bg-secondary h-12 focus-visible:ring-1 focus-visible:ring-primary/50 text-foreground"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        disabled={isPending}
+                        min={0}
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                        USDC
+                    </div>
+                </div>
+
+                {/* Simulated Output (Optional, could add later if logic existed) */}
+                {/* <div className="flex justify-between text-xs text-muted-foreground px-1">
+                    <span>Est. Return</span>
+                    <span className="text-green-400">+$0.00 (0%)</span>
+                </div> */}
+
                 <Button
-                    className={`w-full ${isAllowanceSufficient ? bgClass : "bg-primary"}`}
+                    className={`w-full h-12 font-bold text-base transition-all ${isAllowanceSufficient ? bgClass : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
                     onClick={isAllowanceSufficient ? handleBuy : handleApprove}
                     disabled={isPending || !amount || parseFloat(amount) <= 0}
-                    variant={isAllowanceSufficient ? "default" : "secondary"}
+                    variant="default"
                 >
-                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                     {buttonLabel}
                 </Button>
             </div>
-            {buyHash && <div className="text-xs text-muted-foreground break-all">Tx: {buyHash}</div>}
+
+            {buyHash && (
+                <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-200 break-all">
+                    <span className="font-semibold block mb-1">Transaction Sent:</span>
+                    {buyHash}
+                </div>
+            )}
         </div>
     )
 }
