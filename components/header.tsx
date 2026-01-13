@@ -1,16 +1,19 @@
 "use client"
 
 import Link from "next/link"
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Search, Trophy, Menu, Home, PlusCircle } from "lucide-react"
+import { usePrivy } from '@privy-io/react-auth';
+import { Search, Trophy, Menu, Home, PlusCircle, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-
 import { useUserRights } from "@/hooks/useUserRights"
 
 export default function Header() {
   const { hasCreationRights, isConnected } = useUserRights()
+  const { ready, authenticated, user, login, logout } = usePrivy();
+
+  // Disable login when Privy is not ready or the user is already authenticated
+  const disableLogin = !ready || (ready && authenticated);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -36,7 +39,7 @@ export default function Header() {
         </div>
 
         {/* Right Side Actions */}
-        <div className="ml-auto flex items-center gap-2 md:gap-3">
+        <div className="ml-auto flex items-center gap-2 md:gap-4">
           <ThemeToggle className="h-8 w-8 md:h-9 md:w-9" />
 
           {isConnected && hasCreationRights && (
@@ -45,94 +48,40 @@ export default function Header() {
             </Button>
           )}
 
-          <ConnectButton.Custom>
-            {({
-              account,
-              chain,
-              openAccountModal,
-              openChainModal,
-              openConnectModal,
-              authenticationStatus,
-              mounted,
-            }) => {
-              const ready = mounted && authenticationStatus !== 'loading';
-              const connected =
-                ready &&
-                account &&
-                chain &&
-                (!authenticationStatus ||
-                  authenticationStatus === 'authenticated');
-
-              return (
-                <div
-                  {...(!ready && {
-                    'aria-hidden': true,
-                    'style': {
-                      opacity: 0,
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    },
-                  })}
-                >
-                  {(() => {
-                    if (!connected) {
-                      return (
-                        <Button onClick={openConnectModal} size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-none">
-                          Connect Wallet
-                        </Button>
-                      );
-                    }
-                    if (chain.unsupported) {
-                      return (
-                        <Button onClick={openChainModal} variant="destructive" size="sm">
-                          Wrong network
-                        </Button>
-                      );
-                    }
-                    return (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={openChainModal}
-                          className="hidden items-center rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary/80 sm:flex"
-                          type="button"
-                        >
-                          {chain.hasIcon && (
-                            <div
-                              style={{
-                                background: chain.iconBackground,
-                                width: 18,
-                                height: 18,
-                                borderRadius: 999,
-                                overflow: 'hidden',
-                                marginRight: 4,
-                              }}
-                            >
-                              {chain.iconUrl && (
-                                <img
-                                  alt={chain.name ?? 'Chain icon'}
-                                  src={chain.iconUrl}
-                                  style={{ width: 18, height: 18 }}
-                                />
-                              )}
-                            </div>
-                          )}
-                          {chain.name}
-                        </button>
-                        <button
-                          onClick={openAccountModal}
-                          className="flex items-center gap-2 rounded-lg border border-border bg-secondary pl-2 pr-3 py-1 md:py-1.5 text-xs md:text-sm font-medium transition-colors hover:bg-secondary/80"
-                          type="button"
-                        >
-                          <div className="h-4 w-4 md:h-5 md:w-5 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
-                          {account.displayName}
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            }}
-          </ConnectButton.Custom>
+          {/* Privy Login/Logout */}
+          {!authenticated ? (
+            <Button 
+              onClick={login} 
+              disabled={disableLogin}
+              size="sm" 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-none"
+            >
+              Login
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2">
+              {/* User Info */}
+              <div className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm font-medium">
+                <div className="h-5 w-5 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
+                <span className="text-foreground">
+                  {user?.email?.address || 
+                   user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4) ||
+                   'User'}
+                </span>
+              </div>
+              
+              {/* Logout Button */}
+              <Button 
+                onClick={logout}
+                size="sm"
+                variant="ghost"
+                className="text-foreground hover:bg-secondary"
+              >
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Logout</span>
+              </Button>
+            </div>
+          )}
 
           {/* Mobile Hamburger Menu */}
           <Sheet>
@@ -150,15 +99,40 @@ export default function Header() {
                 </SheetTitle>
               </SheetHeader>
               <div className="mt-8 flex flex-col gap-4">
-                <Link href="/" className="flex items-center gap-3 px-4 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
+                {authenticated && user && (
+                  <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {user?.email?.address || 
+                         user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4) ||
+                         'User'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                <Link href="/" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
                   <Home className="h-5 w-5" />
                   <span className="font-medium">Home</span>
                 </Link>
+                
                 {isConnected && hasCreationRights && (
-                  <Link href="/create-market" className="flex items-center gap-3 px-4 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
+                  <Link href="/create-market" className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-secondary/50 transition-colors text-foreground">
                     <PlusCircle className="h-5 w-5" />
                     <span className="font-medium">Create Market</span>
                   </Link>
+                )}
+
+                {authenticated && (
+                  <Button 
+                    onClick={logout}
+                    variant="outline"
+                    className="w-full justify-start gap-3 px-4"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="font-medium">Logout</span>
+                  </Button>
                 )}
               </div>
             </SheetContent>
