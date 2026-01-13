@@ -8,8 +8,6 @@ import { Loader2 } from "lucide-react"
 export default function Home() {
   const { markets, isLoading } = useMarkets()
 
-  const allMarkets = markets;
-
   console.log(markets)
 
   return (
@@ -29,7 +27,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">All Markets</h2>
             </div>
-            <MarketGrid markets={allMarkets} />
+            <MarketGrid markets={markets} />
           </section>
         )}
 
