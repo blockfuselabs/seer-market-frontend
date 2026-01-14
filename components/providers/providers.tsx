@@ -5,17 +5,51 @@ import {
     QueryClientProvider,
 } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
-import {
-    RainbowKitProvider,
-    darkTheme,
-} from '@rainbow-me/rainbowkit';
 import { PrivyProvider } from '@privy-io/react-auth';
-import { config } from '@/lib/wagmi';
+import { getConfig, getSSRConfig } from '@/lib/wagmi';
 import { ThemeProvider } from "./theme-provider"
 
-const queryClient = new QueryClient();
-
 export function Providers({ children }: { children: React.ReactNode }) {
+    const [queryClient] = React.useState(() => new QueryClient());
+    const [mounted, setMounted] = React.useState(false);
+    const [config, setConfig] = React.useState(() => {
+        // Initialize with SSR-safe config
+        if (typeof window === 'undefined') {
+            return getSSRConfig();
+        }
+        return null;
+    });
+
+    React.useEffect(() => {
+        setMounted(true);
+        // Update to client config once mounted
+        if (typeof window !== 'undefined') {
+            setConfig(getConfig());
+        }
+    }, []);
+
+    // Always use a config (SSR-safe initially, then client config)
+    const wagmiConfig = config || getSSRConfig();
+
+    // Always render WagmiProvider for SSR compatibility
+    // PrivyProvider only renders when mounted to avoid indexedDB issues
+    if (!mounted) {
+        return (
+            <WagmiProvider config={wagmiConfig}>
+                <QueryClientProvider client={queryClient}>
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="dark"
+                        enableSystem
+                        disableTransitionOnChange
+                    >
+                        {children}
+                    </ThemeProvider>
+                </QueryClientProvider>
+            </WagmiProvider>
+        );
+    }
+
     return (
         <PrivyProvider
             appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
@@ -35,12 +69,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
                     },
                 },
                 // Default chain
-                defaultChain: config.chains[0],
+                defaultChain: wagmiConfig.chains[0],
                 // Supported chains
-                supportedChains: config.chains,
+                supportedChains: [...wagmiConfig.chains],
             }}
         >
-            <WagmiProvider config={config}>
+            <WagmiProvider config={wagmiConfig}>
                 <QueryClientProvider client={queryClient}>
                     <ThemeProvider
                         attribute="class"
@@ -48,15 +82,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         enableSystem
                         disableTransitionOnChange
                     >
-                        <RainbowKitProvider theme={darkTheme({
-                            accentColor: '#161616',
-                            accentColorForeground: 'white',
-                            borderRadius: 'small',
-                            fontStack: 'system',
-                            overlayBlur: 'small',
-                        })}>
-                            {children}
-                        </RainbowKitProvider>
+                        {children}
                     </ThemeProvider>
                 </QueryClientProvider>
             </WagmiProvider>
