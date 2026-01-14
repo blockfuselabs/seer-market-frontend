@@ -13,9 +13,14 @@ import { PrivyProvider } from '@privy-io/react-auth';
 import { config } from '@/lib/wagmi';
 import { ThemeProvider } from "./theme-provider"
 
-const queryClient = new QueryClient();
-
 export function Providers({ children }: { children: React.ReactNode }) {
+    const [queryClient] = React.useState(() => new QueryClient());
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
     return (
         <PrivyProvider
             appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
@@ -55,7 +60,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                             fontStack: 'system',
                             overlayBlur: 'small',
                         })}>
-                            {children}
+                            {mounted && children}
                         </RainbowKitProvider>
                     </ThemeProvider>
                 </QueryClientProvider>
