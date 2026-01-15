@@ -2,6 +2,9 @@
 
 import { useMarket } from "@/hooks/useMarket"
 import Header from "@/components/layout/header"
+import { useQuery } from "@tanstack/react-query"
+import { gql } from "graphql-request"
+import { fetchSubgraph } from "@/lib/subgraph"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import { TradingForm } from "@/components/market/trading-form"
@@ -16,6 +19,35 @@ export default function EventPage() {
     const params = useParams()
     const id = params.id as string
     const { market, isLoading } = useMarket(id)
+
+    // Subgraph Query for Shares Bought
+    const query = gql`
+        query GetSharesBought($marketId: String!) {
+            sharesBoughts(
+                first: 1000
+                orderBy: blockTimestamp
+                orderDirection: asc
+                where: { marketId: $marketId }
+            ) {
+                id
+                marketId
+                user
+                yes
+                amount
+                cost
+                priceYES
+                priceNO
+                blockTimestamp
+            }
+        }
+    `
+
+    const { data: subgraphData } = useQuery({
+        queryKey: ['sharesBoughts', id],
+        queryFn: async () => fetchSubgraph(query, { marketId: id })
+    })
+
+    console.log("Subgraph Response:", subgraphData)
 
     if (isLoading) {
         return <MarketDetailSkeleton />
@@ -67,7 +99,7 @@ export default function EventPage() {
 
                         {/* Chart Section */}
                         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-                            <MarketChart />
+                            <MarketChart data={subgraphData?.sharesBoughts} />
                         </div>
 
                         {/* Description & Rules */}
