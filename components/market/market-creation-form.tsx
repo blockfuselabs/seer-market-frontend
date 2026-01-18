@@ -3,8 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useReadContract, useSimulateContract } from "wagmi"
-import { parseEther, parseUnits, type Address } from "viem"
+import { useAccount, useReadContract } from "wagmi"
+import { parseEther, parseUnits, encodeFunctionData, type Address } from "viem"
+import { baseSepolia } from "wagmi/chains"
 import { CONTRACT_ADDRESS, USDC_ADDRESS } from "@/lib/constants"
 import LMSRABI from "@/lib/LMSRABI.json"
 import { ERC20ABI } from "@/lib/erc20-abi"
@@ -26,6 +27,8 @@ import { uploadJSONToIPFS } from "@/lib/ipfs"
 import { useEffect, useState } from "react"
 import { DateTimePicker } from "@/components/ui/datetime-picker"
 import { uploadFileToCloudinary } from "@/lib/claudinary"
+import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
     question: z.string().min(10, {
@@ -34,7 +37,7 @@ const formSchema = z.object({
     description: z.string().min(10, {
         message: "Description must be at least 10 characters.",
     }),
-    // Allow File object or empty string (before selection)
+
     image: z.any().refine((file) => file instanceof File || (typeof file !== 'string'), {
         message: "Image file is required.",
     }),
@@ -72,18 +75,22 @@ const formSchema = z.object({
 });
 
 export function MarketCreationForm() {
+    const router = useRouter()
     const { address } = useAccount()
-    const { data: hash, isPending: isCreatePending, writeContractAsync: writeCreateMarketAsync } = useWriteContract()
-    const { isLoading: isConfirmingCreate, isSuccess: isConfirmedCreate } =
-        useWaitForTransactionReceipt({
-            hash,
-        })
-
-    // Approval State
-    const { data: approveHash, isPending: isApprovePending, writeContract: writeApprove } = useWriteContract()
-    const { isLoading: isConfirmingApprove, isSuccess: isConfirmedApprove } = useWaitForTransactionReceipt({
-        hash: approveHash
-    })
+    const { authenticated, login, ready, user } = usePrivy()
+    
+    const { sendTransaction } = useSendTransaction()
+    const { wallets } = useWallets()
+    
+    const walletAddress = address || (user?.wallet?.address as `0x${string}` | undefined)
+    const wallet = wallets?.[0] 
+    
+    
+    const [approveHash, setApproveHash] = useState<string | null>(null)
+    const [isApprovePending, setIsApprovePending] = useState(false)
+    const [createHash, setCreateHash] = useState<string | null>(null)
+    const [isCreatePending, setIsCreatePending] = useState(false)
+    const [createStep, setCreateStep] = useState<string>("")
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -94,8 +101,7 @@ export function MarketCreationForm() {
             customCategory: "",
             resolutionSource: "",
             liquidity: 100,
-            // startDate: undefined, // removed default string
-            // endDate: undefined,
+          
         },
     })
 
@@ -103,7 +109,7 @@ export function MarketCreationForm() {
     const imageFile = form.watch("image")
     const [imagePreview, setImagePreview] = useState<string | null>(null)
 
-    // Handle image preview
+    
     useEffect(() => {
         if (imageFile instanceof File) {
             const previewUrl = URL.createObjectURL(imageFile)
@@ -116,68 +122,143 @@ export function MarketCreationForm() {
         }
     }, [imageFile])
 
-    // Check Allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: USDC_ADDRESS as Address,
         abi: ERC20ABI,
         functionName: "allowance",
-        args: [address as Address, CONTRACT_ADDRESS as Address],
+        args: [walletAddress as Address, CONTRACT_ADDRESS as Address],
         query: {
-            enabled: !!address,
+            enabled: !!walletAddress,
         }
     })
 
-    // Refetch allowance after approval confirms
+  
     useEffect(() => {
-        if (isConfirmedApprove) {
-            refetchAllowance()
-            toast.success("USDC Approved!")
+        if (approveHash && !isApprovePending) {
+            
+            setTimeout(() => {
+                refetchAllowance()
+            }, 2000)
         }
-    }, [isConfirmedApprove, refetchAllowance])
+    }, [approveHash, isApprovePending, refetchAllowance])
 
     const isAllowanceSufficient = allowance ? allowance >= parseEther(liquidity.toString()) : false
 
     async function handleApprove() {
-        if (!address) return
-        writeApprove({
-            address: USDC_ADDRESS as Address,
-            abi: ERC20ABI,
-            functionName: "approve",
-            args: [CONTRACT_ADDRESS as Address, parseEther(liquidity.toString())],
-        })
+        // Check if Privy is ready
+        if (!ready) {
+            toast.error("Wallet is initializing, please wait...")
+            return
+        }
+
+        // Check if user is authenticated via Privy
+        if (!authenticated) {
+            toast.info("Please connect your wallet first")
+            login()
+            return
+        }
+
+        // Check if we have a wallet
+        if (!wallet || !walletAddress) {
+            toast.error("Wallet not available. Please reconnect your wallet.")
+            return
+        }
+
+        try {
+            setIsApprovePending(true)
+            
+            // Encode the approve function call
+            const approveAmount = parseEther(liquidity.toString())
+            const data = encodeFunctionData({
+                abi: ERC20ABI,
+                functionName: "approve",
+                args: [CONTRACT_ADDRESS as Address, approveAmount],
+            })
+
+            // Send transaction using Privy
+            const { hash } = await sendTransaction(
+                {
+                    to: USDC_ADDRESS as Address,
+                    data: data,
+                    chainId: baseSepolia.id,
+                },
+                {
+                    address: wallet.address as `0x${string}`,
+                }
+            )
+
+            setApproveHash(hash)
+            toast.success("Approval transaction sent!")
+            setIsApprovePending(false)
+        } catch (error) {
+            setIsApprovePending(false)
+            toast.error(`Failed to approve USDC: ${(error as any)?.message || "Unknown error"}`)
+        }
     }
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         console.log("Submitting form...", values);
+        
+        // Check if Privy is ready
+        if (!ready) {
+            toast.error("Wallet is initializing, please wait...")
+            return
+        }
+
+       
+        if (!authenticated) {
+            toast.info("Please connect your wallet first")
+            login()
+            return
+        }
+
+        if (!walletAddress) {
+            toast.error("Wallet address not available. Please reconnect your wallet.")
+            return
+        }
+
         if (!isAllowanceSufficient) {
             handleApprove();
             return;
         }
 
         try {
-            const loadingToast = toast.loading("Uploading image to Cloudinary...");
-             console.log("Uploading image to Cloudinary...");
-
+            setIsCreatePending(true)
+            setCreateStep("Uploading image...")
+            
             // 1. Upload Image
-             let imageUrl = "";
+            let imageUrl = "";
             if (values.image instanceof File) {
+                const imageToast = toast.loading("Uploading image to Cloudinary...");
+                console.log("📤 Uploading image to Cloudinary:", {
+                    fileName: values.image.name,
+                    fileSize: values.image.size,
+                    fileType: values.image.type,
+                });
+                
                 try {
                     imageUrl = await uploadFileToCloudinary(values.image);
+                    
+                    console.log("✅ Image successfully uploaded to Cloudinary!");
+                    console.log("🔗 Cloudinary URL:", imageUrl);
+                    
+                
+                    toast.dismiss(imageToast);
+                    toast.success("Image uploaded successfully!");
                 } catch (error) {
-                    toast.dismiss(loadingToast);
+                    toast.dismiss(imageToast);
                     console.error("Cloudinary Image Error:", error);
                     toast.error("Failed to upload image. Check your API keys.");
+                    setIsCreatePending(false);
+                    setCreateStep("");
                     return;
                 }
             } else {
-                console.warn("No image file provided or invalid type", values.image);
+                console.warn(" No image file provided or invalid type", values.image);
             }
 
-            console.log("Image uploaded to Cloudinary: ", imageUrl);
-
-            toast.dismiss(loadingToast);
-
             // 2. Upload Metadata
+            setCreateStep("Uploading metadata...")
             const metadataToast = toast.loading("Uploading metadata to IPFS...");
             const metadata = {
                 question: values.question,
@@ -193,18 +274,22 @@ export function MarketCreationForm() {
             let metadataCid = "";
             try {
                 metadataCid = await uploadJSONToIPFS(metadata);
+                toast.dismiss(metadataToast);
+                toast.success(" Metadata uploaded successfully!");
             } catch (error) {
                 toast.dismiss(metadataToast);
                 console.error("IPFS Metadata Error:", error);
                 toast.error("Failed to upload metadata. Check your API keys.");
+                setIsCreatePending(false);
+                setCreateStep("");
                 return;
             }
 
-            toast.dismiss(metadataToast);
-            toast.success("Metadata uploaded! Creating market...");
-
             // 3. Create Market
-            // Dates are already Date objects
+            setCreateStep("Creating market...")
+            const createToast = toast.loading("Creating market on blockchain...");
+            
+           
             let startTime = Math.floor(values.startDate.getTime() / 1000)
             const endTime = Math.floor(values.endDate.getTime() / 1000)
             const now = Math.floor(Date.now() / 1000)
@@ -222,9 +307,18 @@ export function MarketCreationForm() {
                 metadataCid
             });
 
-            await writeCreateMarketAsync({
-                address: CONTRACT_ADDRESS as `0x${string}`,
-                abi: LMSRABI,
+           
+            if (!wallet || !walletAddress) {
+                toast.dismiss(createToast);
+                toast.error("Wallet not available. Please reconnect your wallet.")
+                setIsCreatePending(false);
+                setCreateStep("");
+                return
+            }
+
+           
+            const createMarketData = encodeFunctionData({
+                abi: LMSRABI as any,
                 functionName: 'createMarket',
                 args: [
                     parseUnits(values.liquidity.toString(), 6), // _b
@@ -233,11 +327,46 @@ export function MarketCreationForm() {
                     values.question,
                     metadataCid // _cId
                 ],
-                // Manual gas limit to bypass estimation errors if simulation fails vaguely
-                gas: BigInt(1000000),
             })
+
+            // Send transaction using Privy
+            const { hash: createHash } = await sendTransaction(
+                {
+                    to: CONTRACT_ADDRESS as Address,
+                    data: createMarketData,
+                    chainId: baseSepolia.id,
+                },
+                {
+                    address: wallet.address as `0x${string}`,
+                }
+            )
+
+            setCreateHash(createHash)
+            toast.dismiss(createToast);
+            toast.success("🎉 Market created successfully! Transaction sent to blockchain.")
+            setIsCreatePending(false)
+            setCreateStep("")
+            
+            form.reset({
+                question: "",
+                description: "",
+                category: "",
+                customCategory: "",
+                resolutionSource: "",
+                liquidity: 100,
+                image: undefined,
+                startDate: undefined,
+                endDate: undefined,
+            })
+            setImagePreview(null)
+            
+            setTimeout(() => {
+                router.push("/")
+            }, 2000)
         } catch (error) {
             console.error("Create Market Error:", error)
+            setIsCreatePending(false)
+            setCreateStep("")
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             toast.error(`Failed to create market: ${(error as any).message || "Unknown error"}`)
         }
@@ -270,7 +399,7 @@ export function MarketCreationForm() {
                             <FormItem>
                                 <FormLabel>Description</FormLabel>
                                 <FormControl>
-                                    <Textarea placeholder="Provide context and resolution criteria..." {...field} className="min-h-[100px] bg-secondary border-border text-foreground" />
+                                    <Textarea placeholder="Provide context and resolution criteria..." {...field} className="min-h-25 bg-secondary border-border text-foreground" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -431,25 +560,25 @@ export function MarketCreationForm() {
 
                 <div className="pt-4">
                     {isAllowanceSufficient ? (
-                        <Button type="submit" disabled={isCreatePending || isConfirmingCreate} className="w-full text-base font-semibold h-12">
-                            {isCreatePending ? "Confirming..." : isConfirmingCreate ? "Processing..." : "Create Market"}
+                        <Button type="submit" disabled={isCreatePending} className="w-full text-base font-semibold h-12">
+                            {isCreatePending ? (createStep || "Processing...") : "Create Market"}
                         </Button>
                     ) : (
                         <Button
                             type="button"
                             onClick={handleApprove}
-                            disabled={isApprovePending || isConfirmingApprove}
+                            disabled={isApprovePending}
                             className="w-full font-semibold h-12 bg-emerald-600 text-white hover:bg-emerald-700"
                             variant="default"
                         >
-                            {isApprovePending ? "Confirming Approval..." : isConfirmingApprove ? "Processing Approval..." : "Approve USDC"}
+                            {isApprovePending ? "Processing Approval..." : "Approve USDC"}
                         </Button>
                     )}
                 </div>
 
-                {hash && <div className="p-3 rounded bg-green-500/10 border border-green-500/20 text-xs text-green-400 break-all">Create Tx: {hash}</div>}
+                {createHash && <div className="p-3 rounded bg-green-500/10 border border-green-500/20 text-xs text-green-400 break-all">Create Tx: {createHash}</div>}
                 {approveHash && <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 break-all">Approve Tx: {approveHash}</div>}
-                {isConfirmedCreate && <div className="text-center text-green-500 font-bold text-lg">Market Created Successfully!</div>}
+                {createHash && !isCreatePending && <div className="text-center text-green-500 font-bold text-lg">Market Creation Transaction Sent!</div>}
             </form>
         </Form>
     )

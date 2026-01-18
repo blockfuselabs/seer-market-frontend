@@ -31,25 +31,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Always use a config (SSR-safe initially, then client config)
     const wagmiConfig = config || getSSRConfig();
 
-    // Always render WagmiProvider for SSR compatibility
-    // PrivyProvider only renders when mounted to avoid indexedDB issues
-    if (!mounted) {
-        return (
-            <WagmiProvider config={wagmiConfig}>
-                <QueryClientProvider client={queryClient}>
-                    <ThemeProvider
-                        attribute="class"
-                        defaultTheme="dark"
-                        enableSystem
-                        disableTransitionOnChange
-                    >
-                        {children}
-                    </ThemeProvider>
-                </QueryClientProvider>
-            </WagmiProvider>
-        );
-    }
-
+    // Always render PrivyProvider to avoid "useWallets called outside PrivyProvider" warnings
+    // PrivyProvider handles SSR internally and won't cause issues
     return (
         <PrivyProvider
             appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
