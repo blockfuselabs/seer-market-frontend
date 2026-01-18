@@ -66,7 +66,12 @@ export function useMarket(marketId: string) {
         // Image
         let imageUrl = "/bitcoin-concept.png"
         if (metadata?.image) {
-            imageUrl = getIPFSUrl(metadata.image)
+             if(metadata?.imageSource === "cloudinary") {
+                imageUrl = metadata.image;
+            } else {
+
+             imageUrl = getIPFSUrl(metadata.image)
+            }
         } else if (cId && cId.includes("TestImageCid")) {
             imageUrl = "/super-bowl-atmosphere.png"
         }
