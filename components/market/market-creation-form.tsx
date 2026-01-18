@@ -314,10 +314,10 @@ export function MarketCreationForm() {
                                 <FormItem>
                                     <FormLabel>Custom Category</FormLabel>
                                     <FormControl>
-                                        <Input 
-                                            placeholder="Enter your custom category" 
-                                            {...field} 
-                                            className="bg-secondary border-border text-foreground focus:ring-primary" 
+                                        <Input
+                                            placeholder="Enter your custom category"
+                                            {...field}
+                                            className="bg-secondary border-border text-foreground focus:ring-primary"
                                         />
                                     </FormControl>
                                     <FormMessage />
