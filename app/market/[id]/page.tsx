@@ -159,18 +159,18 @@ export default function EventPage() {
                                     <TabsList className="grid w-full grid-cols-2 rounded-t-xl bg-muted/50 p-0 h-auto">
                                         <TabsTrigger
                                             value="YES"
-                                            className="h-12 rounded-tl-xl rounded-tr-none rounded-br-none rounded-bl-none data-[state=active]:bg-emerald-100 dark:data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 transition-all font-bold"
+                                            className="h-10 md:h-12 rounded-tl-xl rounded-tr-none rounded-br-none rounded-bl-none data-[state=active]:bg-emerald-100 dark:data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-400 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 transition-all font-bold"
                                         >
                                             Buy Yes
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="NO"
-                                            className="h-12 rounded-tr-xl rounded-tl-none rounded-br-none rounded-bl-none data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-500/20 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-400 data-[state=active]:border-b-2 data-[state=active]:border-red-500 transition-all font-bold"
+                                            className="h-10 md:h-12 rounded-tr-xl rounded-tl-none rounded-br-none rounded-bl-none data-[state=active]:bg-red-100 dark:data-[state=active]:bg-red-500/20 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-400 data-[state=active]:border-b-2 data-[state=active]:border-red-500 transition-all font-bold"
                                         >
                                             Buy No
                                         </TabsTrigger>
                                     </TabsList>
-                                    <div className="p-4">
+                                    <div className="p-3 md:p-4">
                                         <TabsContent value="YES" className="mt-0">
                                             <TradingForm
                                                 marketId={id}

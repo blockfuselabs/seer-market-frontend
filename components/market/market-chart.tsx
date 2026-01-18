@@ -68,14 +68,14 @@ export function MarketChart({ data }: MarketChartProps) {
         <div className="w-full">
             <div className="mb-4 flex items-baseline gap-3">
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">{endProb}%</span>
-                    <span className="text-sm font-medium text-muted-foreground">chance</span>
+                    <span className="text-xl md:text-3xl font-bold text-foreground">{endProb}%</span>
+                    <span className="text-xs md:text-sm font-medium text-muted-foreground">chance</span>
                 </div>
             </div>
 
             <div className="h-[200px] md:h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorProbability" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor={color} stopOpacity={0.2} />
@@ -87,16 +87,18 @@ export function MarketChart({ data }: MarketChartProps) {
                             dataKey="date"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                            tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
                             minTickGap={40}
                         />
                         <YAxis
                             domain={[0, 100]}
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }}
+                            tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
                             tickFormatter={(value) => `${value}%`}
                             orientation="right"
+                            tickMargin={0}
+                            width={35}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--muted-foreground)', strokeDasharray: '4 4' }} />
                         <Area
@@ -118,7 +120,7 @@ export function MarketChart({ data }: MarketChartProps) {
                     <button
                         key={range}
                         disabled
-                        className={`cursor-not-allowed rounded px-3 py-1 text-xs font-medium transition-colors ${range === 'All'
+                        className={`cursor-not-allowed rounded px-3 py-1 text-[10px] font-medium transition-colors ${range === 'All'
                             ? 'bg-secondary text-primary'
                             : 'text-muted-foreground opacity-50'
                             }`}
