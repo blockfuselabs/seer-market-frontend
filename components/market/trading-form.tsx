@@ -110,10 +110,10 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
         <div className="space-y-4">
             {/* Price Display */}
             <div className="flex justify-between items-end border-b border-border pb-4">
-                <span className="text-sm font-medium text-muted-foreground">Current Price</span>
+                <span className="text-xs md:text-sm font-medium text-muted-foreground">Current Price</span>
                 <div className="text-right">
-                    <div className={`text-3xl font-bold ${colorClass}`}>{probability}%</div>
-                    <div className="text-xs text-muted-foreground">1 {outcome} = ${probability / 100}</div>
+                    <div className={`text-2xl md:text-3xl font-bold ${colorClass}`}>{probability}%</div>
+                    <div className="text-[10px] md:text-xs text-muted-foreground">1 <span className="font-bold">{outcome}</span> = ${probability / 100}</div>
                 </div>
             </div>
 
@@ -123,7 +123,7 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
                     <Input
                         type="number"
                         placeholder="0.00"
-                        className="pr-16 text-lg font-medium border-border bg-secondary h-12 focus-visible:ring-1 focus-visible:ring-primary/50 text-foreground"
+                        className="pr-16 text-base md:text-lg font-medium border-border bg-secondary h-10 md:h-12 focus-visible:ring-1 focus-visible:ring-primary/50 text-foreground"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         disabled={isPending}
@@ -141,7 +141,7 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
                 </div> */}
 
                 <Button
-                    className={`w-full h-12 font-bold text-base transition-all ${isAllowanceSufficient ? bgClass : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
+                    className={`w-full h-10 md:h-12 font-bold text-sm md:text-base transition-all ${isAllowanceSufficient ? bgClass : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
                     onClick={isAllowanceSufficient ? handleBuy : handleApprove}
                     disabled={isPending || !amount || parseFloat(amount) <= 0}
                     variant="default"
