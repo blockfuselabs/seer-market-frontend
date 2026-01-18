@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { ArrowUpRight, TrendingUp } from "lucide-react"
 import type { Market } from "@/lib/mock-data"
 import { MarketTimer } from "./market-timer"
@@ -12,6 +13,7 @@ interface MarketCardProps {
 export default function MarketCard({ market }: MarketCardProps) {
   const yesOutcome = market.outcomes.find(o => o.name === 'Yes') || market.outcomes[0];
   const noOutcome = market.outcomes.find(o => o.name === 'No') || market.outcomes[1];
+  const router = useRouter();
 
   return (
     <Link href={`/market/${market.id}`} className="group block h-full">
@@ -40,7 +42,13 @@ export default function MarketCard({ market }: MarketCardProps) {
         <div className="mt-auto px-3 pb-3">
           <div className="grid grid-cols-2 gap-1.5">
             {/* Yes Outcome */}
-            <div className="relative flex items-center justify-between overflow-hidden rounded-sm bg-emerald-100 dark:bg-emerald-500/10 border border-transparent hover:bg-emerald-200 dark:hover:bg-emerald-500/20 hover:border-emerald-500/20 px-3 py-1.5 transition-all hover:shadow-sm hover:shadow-emerald-500/5">
+            <div
+              onClick={(e) => {
+                e.preventDefault()
+                router.push(`/market/${market.id}?outcome=YES`)
+              }}
+              className="relative flex items-center justify-between overflow-hidden rounded-sm bg-emerald-100 dark:bg-emerald-500/10 border border-transparent hover:bg-emerald-200 dark:hover:bg-emerald-500/20 hover:border-emerald-500/20 px-3 py-1.5 transition-all hover:shadow-sm hover:shadow-emerald-500/5 cursor-pointer"
+            >
               <span className="text-sm md:text-base font-bold text-emerald-800 dark:text-emerald-400">Yes</span>
               <div className="relative flex items-center justify-center">
                 {/* Full Circle Gauge */}
@@ -55,7 +63,13 @@ export default function MarketCard({ market }: MarketCardProps) {
             </div>
 
             {/* No Outcome */}
-            <div className="relative flex items-center justify-between overflow-hidden rounded-sm bg-red-100 dark:bg-red-500/10 border border-transparent hover:bg-red-200 dark:hover:bg-red-500/20 hover:border-red-500/20 px-3 py-1.5 transition-all hover:shadow-sm hover:shadow-red-500/5">
+            <div
+              onClick={(e) => {
+                e.preventDefault()
+                router.push(`/market/${market.id}?outcome=NO`)
+              }}
+              className="relative flex items-center justify-between overflow-hidden rounded-sm bg-red-100 dark:bg-red-500/10 border border-transparent hover:bg-red-200 dark:hover:bg-red-500/20 hover:border-red-500/20 px-3 py-1.5 transition-all hover:shadow-sm hover:shadow-red-500/5 cursor-pointer"
+            >
               <span className="text-sm md:text-base font-bold text-red-800 dark:text-red-400">No</span>
               <div className="relative flex items-center justify-center">
                 {/* Full Circle Gauge */}

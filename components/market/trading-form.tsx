@@ -113,7 +113,7 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
                 <span className="text-sm font-medium text-muted-foreground">Current Price</span>
                 <div className="text-right">
                     <div className={`text-3xl font-bold ${colorClass}`}>{probability}%</div>
-                    <div className="text-xs text-muted-foreground">1 {outcome} = ${probability / 100}</div>
+                    <div className="text-xs text-muted-foreground">1 <span className="font-bold">{outcome}</span> = ${probability / 100}</div>
                 </div>
             </div>
 

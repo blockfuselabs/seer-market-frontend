@@ -39,19 +39,20 @@ export function MarketResolution({ marketId }: MarketResolutionProps) {
     const isPending = isWritePending || isConfirming
 
     return (
-        <Card className="border-orange-500/50 bg-orange-950/10">
-            <CardHeader>
-                <CardTitle className="text-orange-500 text-lg">Admin Resolution</CardTitle>
+        <Card className="border-orange-500/50 bg-orange-950/10 shadow-none md:shadow-sm">
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-4">
+                <CardTitle className="text-orange-500 text-sm md:text-lg">Admin Resolution</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
+            <CardContent className="space-y-3 p-4 md:p-6 pt-0 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                     As an admin/moderator, you can resolve this market. This action is irreversible.
                 </p>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <Button
                         variant="default"
-                        className="bg-green-600 hover:bg-green-700"
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 h-8 md:h-10 text-xs md:text-sm"
                         disabled={isPending}
                         onClick={() => handleResolve(true)}
                     >
@@ -59,6 +60,8 @@ export function MarketResolution({ marketId }: MarketResolutionProps) {
                     </Button>
                     <Button
                         variant="destructive"
+                        size="sm"
+                        className="h-8 md:h-10 text-xs md:text-sm"
                         disabled={isPending}
                         onClick={() => handleResolve(false)}
                     >
@@ -66,8 +69,8 @@ export function MarketResolution({ marketId }: MarketResolutionProps) {
                     </Button>
                 </div>
 
-                {hash && <div className="text-xs text-muted-foreground break-all">Tx: {hash}</div>}
-                {isConfirmed && <div className="text-sm text-green-500 font-medium">Market Resolved Successfully!</div>}
+                {hash && <div className="text-[10px] md:text-xs text-muted-foreground break-all">Tx: {hash}</div>}
+                {isConfirmed && <div className="text-xs md:text-sm text-green-500 font-medium">Market Resolved Successfully!</div>}
             </CardContent>
         </Card>
     )
