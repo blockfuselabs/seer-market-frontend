@@ -22,9 +22,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { uploadFileToIPFS, uploadJSONToIPFS } from "@/lib/ipfs"
+import { uploadJSONToIPFS } from "@/lib/ipfs"
 import { useEffect, useState } from "react"
 import { DateTimePicker } from "@/components/ui/datetime-picker"
+import { uploadFileToCloudinary } from "@/lib/claudinary"
 
 const formSchema = z.object({
     question: z.string().min(10, {
@@ -154,17 +155,17 @@ export function MarketCreationForm() {
         }
 
         try {
-            const loadingToast = toast.loading("Uploading image to IPFS...");
-            console.log("Uploading image to IPFS...");
+            const loadingToast = toast.loading("Uploading image to Cloudinary...");
+             console.log("Uploading image to Cloudinary...");
 
             // 1. Upload Image
-            let imageCid = "";
+             let imageUrl = "";
             if (values.image instanceof File) {
                 try {
-                    imageCid = await uploadFileToIPFS(values.image);
+                    imageUrl = await uploadFileToCloudinary(values.image);
                 } catch (error) {
                     toast.dismiss(loadingToast);
-                    console.error("IPFS Image Error:", error);
+                    console.error("Cloudinary Image Error:", error);
                     toast.error("Failed to upload image. Check your API keys.");
                     return;
                 }
@@ -172,7 +173,7 @@ export function MarketCreationForm() {
                 console.warn("No image file provided or invalid type", values.image);
             }
 
-            console.log("Image uploaded to IPFS: ", imageCid);
+            console.log("Image uploaded to Cloudinary: ", imageUrl);
 
             toast.dismiss(loadingToast);
 
@@ -181,7 +182,8 @@ export function MarketCreationForm() {
             const metadata = {
                 question: values.question,
                 description: values.description,
-                image: `ipfs://${imageCid}`,
+                image: imageUrl,
+                imageSource: "cloudinary",
                 category: values.category === "Other" && values.customCategory ? values.customCategory : values.category,
                 resolutionSource: values.resolutionSource
             };

@@ -123,7 +123,12 @@ export function useMarkets() {
         const metadata = metadataMap[cId]
         console.log('Metadata', metadata)
         if (metadata?.image) {
-            imageUrl = getIPFSUrl(metadata.image)
+            if(metadata?.imageSource === "cloudinary") {
+                imageUrl = metadata.image;
+            } else {
+
+             imageUrl = getIPFSUrl(metadata.image)
+            }
         } else if (cId && cId.includes("TestImageCid")) {
             imageUrl = "/super-bowl-atmosphere.png"
         }
