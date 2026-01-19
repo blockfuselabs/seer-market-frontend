@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { parseUnits, type Address } from "viem"
+import { useAccount, useReadContract } from "wagmi"
+import { parseUnits, encodeFunctionData, type Address } from "viem"
+import { baseSepolia } from "wagmi/chains"
 import { CONTRACT_ADDRESS, USDC_ADDRESS } from "@/lib/constants"
 import LMSRABI from "@/lib/LMSRABI.json"
 import { ERC20ABI } from "@/lib/erc20-abi"
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth"
 
 interface TradingFormProps {
     marketId: string
@@ -19,38 +21,41 @@ interface TradingFormProps {
 
 export function TradingForm({ marketId, outcome, probability }: TradingFormProps) {
     const { address } = useAccount()
+    const { authenticated, login, ready, user } = usePrivy()
+    const { sendTransaction } = useSendTransaction()
+    const { wallets } = useWallets()
+    
+    const walletAddress = address || (user?.wallet?.address as `0x${string}` | undefined)
+    const wallet = wallets[0] 
+    
     const [amount, setAmount] = useState("")
+    
+    const [approveHash, setApproveHash] = useState<string | null>(null)
+    const [isApprovePending, setIsApprovePending] = useState(false)
+    const [buyHash, setBuyHash] = useState<string | null>(null)
+    const [isBuyPending, setIsBuyPending] = useState(false)
 
-    // Approval State
-    const { data: approveHash, isPending: isApprovePending, writeContract: writeApprove } = useWriteContract()
-    const { isLoading: isConfirmingApprove, isSuccess: isConfirmedApprove } = useWaitForTransactionReceipt({
-        hash: approveHash
-    })
-
-    // Buy State
-    const { data: buyHash, isPending: isBuyPending, writeContract: writeBuy } = useWriteContract()
-    const { isLoading: isConfirmingBuy, isSuccess: isConfirmedBuy } = useWaitForTransactionReceipt({
-        hash: buyHash
-    })
-
-    // Check Allowance
+   
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: USDC_ADDRESS as Address,
         abi: ERC20ABI,
         functionName: "allowance",
-        args: [address as Address, CONTRACT_ADDRESS as Address],
+        args: [walletAddress as Address, CONTRACT_ADDRESS as Address],
         query: {
-            enabled: !!address,
+            enabled: !!walletAddress,
         }
     })
 
-    // Refetch allowance after approval confirms
+    
     useEffect(() => {
-        if (isConfirmedApprove) {
-            refetchAllowance()
-            toast.success("USDC Approved!")
+        if (approveHash && !isApprovePending) {
+            
+            setTimeout(() => {
+                refetchAllowance()
+                toast.success("USDC Approved!")
+            }, 2000)
         }
-    }, [isConfirmedApprove, refetchAllowance])
+    }, [approveHash, isApprovePending, refetchAllowance])
 
     // Normalize amount to BigInt
     const amountBI = useMemo(() => {
@@ -63,43 +68,122 @@ export function TradingForm({ marketId, outcome, probability }: TradingFormProps
 
     const isAllowanceSufficient = allowance ? allowance >= amountBI : false
 
-    // Handlers
-    function handleApprove() {
-        if (!address) return toast.error("Please connect wallet")
-        writeApprove({
-            address: USDC_ADDRESS as Address,
-            abi: ERC20ABI,
-            functionName: "approve",
-            args: [CONTRACT_ADDRESS as Address, amountBI],
-        })
-    }
-
-    function handleBuy() {
-        if (!address) return toast.error("Please connect wallet")
-        if (!amount || parseFloat(amount) <= 0) return toast.error("Enter a valid amount")
-
-        const functionName = outcome === "YES" ? "buyYES" : "buyNO"
-
-        writeBuy({
-            address: CONTRACT_ADDRESS as Address,
-            abi: LMSRABI as any,
-            functionName: functionName,
-            args: [BigInt(marketId), amountBI],
-        })
-    }
-
-    useEffect(() => {
-        if (isConfirmedBuy) {
-            toast.success(`Broadcasting ${outcome} purchase!`)
-            setAmount("")
+    
+    async function handleApprove() {
+       
+        if (!ready) {
+            toast.error("Wallet is initializing, please wait...")
+            return
         }
-    }, [isConfirmedBuy, outcome])
 
-    const isPending = isApprovePending || isConfirmingApprove || isBuyPending || isConfirmingBuy
-    const buttonLabel = isApprovePending || isConfirmingApprove
+        if (!authenticated) {
+            toast.info("Please connect your wallet first")
+            login()
+            return
+        }
+
+      
+        if (!wallet || !walletAddress) {
+            toast.error("Wallet not available. Please reconnect your wallet.")
+            return
+        }
+
+        try {
+            setIsApprovePending(true)
+            
+           
+            const data = encodeFunctionData({
+                abi: ERC20ABI,
+                functionName: "approve",
+                args: [CONTRACT_ADDRESS as Address, amountBI],
+            })
+
+          
+            const { hash } = await sendTransaction(
+                {
+                    to: USDC_ADDRESS as Address,
+                    data: data,
+                    chainId: baseSepolia.id,
+                },
+                {
+                    address: wallet.address as `0x${string}`,
+                }
+            )
+
+            setApproveHash(hash)
+            toast.success("Approval transaction sent!")
+            setIsApprovePending(false)
+        } catch (error) {
+            setIsApprovePending(false)
+            toast.error(`Failed to approve USDC: ${(error as any)?.message || "Unknown error"}`)
+        }
+    }
+
+    async function handleBuy() {
+      
+        if (!ready) {
+            toast.error("Wallet is initializing, please wait...")
+            return
+        }
+
+      
+        if (!authenticated) {
+            toast.info("Please connect your wallet first")
+            login()
+            return
+        }
+
+     
+        if (!wallet || !walletAddress) {
+            toast.error("Wallet not available. Please reconnect your wallet.")
+            return
+        }
+
+       
+        if (!amount || parseFloat(amount) <= 0) {
+            toast.error("Enter a valid amount")
+            return
+        }
+
+        try {
+            setIsBuyPending(true)
+            
+            const functionName = outcome === "YES" ? "buyYES" : "buyNO"
+
+          
+            const data = encodeFunctionData({
+                abi: LMSRABI as any,
+                functionName: functionName,
+                args: [BigInt(marketId), amountBI],
+            })
+
+        
+            const { hash } = await sendTransaction(
+                {
+                    to: CONTRACT_ADDRESS as Address,
+                    data: data,
+                    chainId: baseSepolia.id,
+                },
+                {
+                    address: wallet.address as `0x${string}`,
+                }
+            )
+
+            setBuyHash(hash)
+            toast.success(`Buy ${outcome} transaction sent!`)
+            setAmount("")
+            setIsBuyPending(false)
+        } catch (error) {
+            setIsBuyPending(false)
+            toast.error(`Failed to buy ${outcome}: ${(error as any)?.message || "Unknown error"}`)
+        }
+    }
+
+    const isPending = isApprovePending || isBuyPending
+    const buttonLabel = isApprovePending
         ? "Approving..."
         : isAllowanceSufficient
-            ? (isBuyPending || isConfirmingBuy ? "Buying..." : `Buy ${outcome}`)
+            ? (isBuyPending ? "Buying..." : `Buy ${outcome}`)
             : "Approve USDC"
 
     const isGreen = outcome === "YES"
