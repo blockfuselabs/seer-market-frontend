@@ -156,14 +156,50 @@ export default function Header() {
               </SheetHeader>
               <div className="mt-8 flex flex-col gap-4">
                 {authenticated && user && (
-                  <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-secondary/50">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {user?.email?.address ||
-                          user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4) ||
-                          'User'}
-                      </p>
+                  <div className="flex flex-col gap-3 px-4 py-4 rounded-lg bg-secondary/50 border border-border">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-primary/50" />
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium text-foreground truncate max-w-[150px]">
+                            {user?.email?.address ||
+                              user?.wallet?.address?.slice(0, 6) + '...' + user?.wallet?.address?.slice(-4) ||
+                              'User'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          if (user?.wallet?.address) {
+                            navigator.clipboard.writeText(user.wallet.address);
+                            toast.success('Address copied to clipboard');
+                          }
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Wallet className="h-3 w-3" /> ETH
+                        </span>
+                        <span className="font-medium">
+                          {balanceData ? `${Number(Number(balanceData.value) / 10e17).toFixed(4)} ${balanceData.symbol}` : 'Loading...'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Wallet className="h-3 w-3" /> USDC
+                        </span>
+                        <span className="font-medium">
+                          {erc20Amount !== undefined ? `${Number(Number(erc20Amount) / 10e5).toFixed(2)} USDC` : 'Loading...'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
