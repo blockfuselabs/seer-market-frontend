@@ -76,16 +76,15 @@ const formSchema = z.object({
 
 export function MarketCreationForm() {
     const router = useRouter()
-    const { address } = useAccount()
     const { authenticated, login, ready, user } = usePrivy()
-    
+
     const { sendTransaction } = useSendTransaction()
     const { wallets } = useWallets()
-    
-    const walletAddress = address || (user?.wallet?.address as `0x${string}` | undefined)
-    const wallet = wallets?.[0] 
-    
-    
+
+    const walletAddress = (user?.wallet?.address as `0x${string}` | undefined)
+    const wallet = wallets?.[0]
+
+
     const [approveHash, setApproveHash] = useState<string | null>(null)
     const [isApprovePending, setIsApprovePending] = useState(false)
     const [createHash, setCreateHash] = useState<string | null>(null)
@@ -101,7 +100,7 @@ export function MarketCreationForm() {
             customCategory: "",
             resolutionSource: "",
             liquidity: 100,
-          
+
         },
     })
 
@@ -109,7 +108,7 @@ export function MarketCreationForm() {
     const imageFile = form.watch("image")
     const [imagePreview, setImagePreview] = useState<string | null>(null)
 
-    
+
     useEffect(() => {
         if (imageFile instanceof File) {
             const previewUrl = URL.createObjectURL(imageFile)
@@ -132,10 +131,10 @@ export function MarketCreationForm() {
         }
     })
 
-  
+
     useEffect(() => {
         if (approveHash && !isApprovePending) {
-            
+
             setTimeout(() => {
                 refetchAllowance()
             }, 2000)
@@ -166,7 +165,7 @@ export function MarketCreationForm() {
 
         try {
             setIsApprovePending(true)
-            
+
             // Encode the approve function call
             const approveAmount = parseEther(liquidity.toString())
             const data = encodeFunctionData({
@@ -198,14 +197,14 @@ export function MarketCreationForm() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         console.log("Submitting form...", values);
-        
+
         // Check if Privy is ready
         if (!ready) {
             toast.error("Wallet is initializing, please wait...")
             return
         }
 
-       
+
         if (!authenticated) {
             toast.info("Please connect your wallet first")
             login()
@@ -225,7 +224,7 @@ export function MarketCreationForm() {
         try {
             setIsCreatePending(true)
             setCreateStep("Uploading image...")
-            
+
             // 1. Upload Image
             let imageUrl = "";
             if (values.image instanceof File) {
@@ -235,14 +234,14 @@ export function MarketCreationForm() {
                     fileSize: values.image.size,
                     fileType: values.image.type,
                 });
-                
+
                 try {
                     imageUrl = await uploadFileToCloudinary(values.image);
-                    
+
                     console.log("✅ Image successfully uploaded to Cloudinary!");
                     console.log("🔗 Cloudinary URL:", imageUrl);
-                    
-                
+
+
                     toast.dismiss(imageToast);
                     toast.success("Image uploaded successfully!");
                 } catch (error) {
@@ -288,8 +287,8 @@ export function MarketCreationForm() {
             // 3. Create Market
             setCreateStep("Creating market...")
             const createToast = toast.loading("Creating market on blockchain...");
-            
-           
+
+
             let startTime = Math.floor(values.startDate.getTime() / 1000)
             const endTime = Math.floor(values.endDate.getTime() / 1000)
             const now = Math.floor(Date.now() / 1000)
@@ -307,7 +306,7 @@ export function MarketCreationForm() {
                 metadataCid
             });
 
-           
+
             if (!wallet || !walletAddress) {
                 toast.dismiss(createToast);
                 toast.error("Wallet not available. Please reconnect your wallet.")
@@ -316,7 +315,7 @@ export function MarketCreationForm() {
                 return
             }
 
-           
+
             const createMarketData = encodeFunctionData({
                 abi: LMSRABI as any,
                 functionName: 'createMarket',
@@ -346,7 +345,7 @@ export function MarketCreationForm() {
             toast.success("🎉 Market created successfully! Transaction sent to blockchain.")
             setIsCreatePending(false)
             setCreateStep("")
-            
+
             form.reset({
                 question: "",
                 description: "",
@@ -359,7 +358,7 @@ export function MarketCreationForm() {
                 endDate: undefined,
             })
             setImagePreview(null)
-            
+
             setTimeout(() => {
                 router.push("/")
             }, 2000)

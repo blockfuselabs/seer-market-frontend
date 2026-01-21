@@ -1,4 +1,4 @@
-"use client"
+
 
 import { MarketCreationForm } from "@/components/market/market-creation-form"
 import Header from "@/components/layout/header"
