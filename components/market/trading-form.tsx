@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { usePrivy, useSendTransaction, useWallets } from "@privy-io/react-auth"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface TradingFormProps {
     marketId: string
@@ -25,6 +26,7 @@ export function TradingForm({ marketId, outcome, probability, isExpired }: Tradi
     const { authenticated, login, ready, user } = usePrivy()
     const { sendTransaction } = useSendTransaction()
     const { wallets } = useWallets()
+    const queryClient = useQueryClient()
 
     const walletAddress = address || (user?.wallet?.address as `0x${string}` | undefined)
     const wallet = wallets[0]
@@ -173,6 +175,12 @@ export function TradingForm({ marketId, outcome, probability, isExpired }: Tradi
             setBuyHash(hash)
             toast.success(`Buy ${outcome} transaction sent!`)
             setAmount("")
+
+            // Invalidate the graph query to trigger a refetch
+            // Note: Data might not be available immediately from subgraph, 
+            // but this ensures we try to get the latest state
+            queryClient.invalidateQueries({ queryKey: ['sharesBoughts', marketId] })
+
             setIsBuyPending(false)
         } catch (error) {
             setIsBuyPending(false)
