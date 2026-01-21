@@ -66,11 +66,11 @@ export function useMarket(marketId: string) {
         // Image
         let imageUrl = "/bitcoin-concept.png"
         if (metadata?.image) {
-             if(metadata?.imageSource === "cloudinary") {
+            if (metadata?.imageSource === "cloudinary") {
                 imageUrl = metadata.image;
             } else {
 
-             imageUrl = getIPFSUrl(metadata.image)
+                imageUrl = getIPFSUrl(metadata.image)
             }
         } else if (cId && cId.includes("TestImageCid")) {
             imageUrl = "/super-bowl-atmosphere.png"
@@ -96,6 +96,7 @@ export function useMarket(marketId: string) {
             endTime: data[5] ? Number(data[5]) : undefined,
             resolved: data[6],
             yesWon: data[7],
+            isExpired: data[5] ? new Date() > new Date(Number(data[5]) * 1000) : false,
         } as Market
     }
 

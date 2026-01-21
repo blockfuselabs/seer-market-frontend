@@ -176,6 +176,7 @@ export default function EventPage() {
                                                 marketId={id}
                                                 outcome="YES"
                                                 probability={market.outcomes[0].probability}
+                                                isExpired={market.isExpired ?? false}
                                             />
                                         </TabsContent>
                                         <TabsContent value="NO" className="mt-0">
@@ -183,6 +184,7 @@ export default function EventPage() {
                                                 marketId={id}
                                                 outcome="NO"
                                                 probability={market.outcomes[1].probability}
+                                                isExpired={market.isExpired ?? false}
                                             />
                                         </TabsContent>
                                     </div>

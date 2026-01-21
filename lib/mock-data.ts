@@ -20,6 +20,7 @@ export interface Market {
   startDate?: string
   endDate?: string
   category?: string
+  isExpired?: boolean
 }
 
 export const mockMarkets: Market[] = [
