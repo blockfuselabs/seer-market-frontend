@@ -1,13 +1,13 @@
 'use client';
 
-import { useAccount, useReadContracts } from "wagmi";
+import { useReadContracts } from "wagmi";
 import { CONTRACT_ADDRESS } from "@/lib/constants";
 import LMSRABI from "@/lib/LMSRABI.json";
 import { usePrivy } from '@privy-io/react-auth';
 import { useState, useEffect } from "react";
 
 export function useUserRights() {
-    const { ready, authenticated, user, login, logout } = usePrivy();
+    const { ready, authenticated, user } = usePrivy();
 
     const isConnected = ready && authenticated;
 

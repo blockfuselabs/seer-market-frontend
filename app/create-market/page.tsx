@@ -1,5 +1,3 @@
-
-
 export const dynamic = 'force-dynamic';
 
 import { MarketCreationForm } from "@/components/market/market-creation-form"
