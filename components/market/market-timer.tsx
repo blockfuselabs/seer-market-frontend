@@ -63,8 +63,8 @@ export function MarketTimer({ endTime }: MarketTimerProps) {
 
     return (
         <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-            <span>{format(new Date(endTime * 1000), "d MMM yyyy, h:mma").toLowerCase()}</span>
-            <span className="text-gray-300 dark:text-gray-700">•</span>
+            <span>{format(new Date(endTime * 1000), "d MMM yyyy, h:mma")}</span>
+            <span className="text-lg text-black dark:text-white">•</span>
             <div className="flex items-center gap-1.5">
                 <div className="relative flex items-center justify-center">
                     <div className="absolute h-2 w-2 rounded-full bg-red-600 dark:bg-red-400 animate-ping opacity-75" />
