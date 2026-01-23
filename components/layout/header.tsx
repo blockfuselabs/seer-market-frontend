@@ -17,16 +17,20 @@ import { ThemeToggle } from "./theme-toggle"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { useUserRights } from "@/hooks/useUserRights"
 import { toast } from "sonner";
-import { parseEther, parseUnits, erc20Abi } from "viem";
+import { erc20Abi } from "viem";
+import { USDC_ADDRESS } from "@/lib/constants";
+import { useFaucet } from "@/hooks/useFaucet";
 
 export default function Header() {
   const { hasCreationRights } = useUserRights()
   const { ready, authenticated, user, login, logout } = usePrivy();
+  const { claimEth, claimTokens, hasClaimedEth, canClaimTokens, isClaiming } = useFaucet();
+
   const { data: balanceData } = useBalance({
     address: user?.wallet?.address as `0x${string}`,
   });
   const { data: erc20Amount } = useReadContract({
-    address: '0x0215E78217115CAbeCa769c3c25DAAa4c27Ee6dC',
+    address: USDC_ADDRESS as `0x${string}`,
     abi: erc20Abi,
     functionName: 'balanceOf',
     args: user?.wallet?.address ? [user.wallet.address as `0x${string}`] : undefined,
@@ -34,6 +38,41 @@ export default function Header() {
       enabled: !!user?.wallet?.address,
     }
   });
+
+  console.log(`Amount`, erc20Amount);
+
+  const claimETHFaucet = async () => {
+    try {
+      if (hasClaimedEth) {
+        console.log("You have already claimed ETH from the faucet.");
+        toast.error("You have already claimed ETH from the faucet.");
+        return;
+      }
+      toast.info("Claiming ETH...");
+      console.log("Claiming ETH...");
+      await claimEth();
+      console.log("ETH claimed successfully!");
+      toast.success("ETH claimed successfully!");
+    } catch (error) {
+      console.error("Failed to claim ETH:", error);
+      toast.error("Failed to claim ETH. Please try again.");
+    }
+  };
+
+  const claimUSDCFaucet = async () => {
+    try {
+      if (!canClaimTokens) {
+        toast.error("You need to wait 24 hours between token claims.");
+        return;
+      }
+      toast.info("Claiming USDC...");
+      await claimTokens();
+      toast.success("USDC claimed successfully!");
+    } catch (error) {
+      console.error("Failed to claim USDC:", error);
+      toast.error("Failed to claim USDC. Please try again.");
+    }
+  };
 
   // Disable login when Privy is not ready or the user is already authenticated
   const disableLogin = !ready || (ready && authenticated);
@@ -130,6 +169,32 @@ export default function Header() {
                     {erc20Amount !== undefined ? `${Number(Number(erc20Amount) / 10e5).toFixed(2)} USDC` : 'Loading...'}
                   </span>
                 </DropdownMenuItem>
+                {balanceData && Number(balanceData.value) == 0 ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={claimETHFaucet}
+                      disabled={isClaiming || hasClaimedEth}
+                      className={`cursor-pointer ${(isClaiming || hasClaimedEth) ? 'opacity-50' : ''}`}
+                    >
+                      <Wallet className="mr-2 h-4 w-4" />
+                      <span>{hasClaimedEth ? 'Eth Claimed' : 'Claim Faucet (ETH)'}</span>
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+                {erc20Amount !== undefined && Number(erc20Amount) == 0 ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={claimUSDCFaucet}
+                      disabled={isClaiming || !canClaimTokens}
+                      className={`cursor-pointer ${(isClaiming || !canClaimTokens) ? 'opacity-50' : ''}`}
+                    >
+                      <Wallet className="mr-2 h-4 w-4" />
+                      <span>{!canClaimTokens ? 'Cooldown Active' : 'Claim Faucet (USDC)'}</span>
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -200,6 +265,33 @@ export default function Header() {
                           {erc20Amount !== undefined ? `${Number(Number(erc20Amount) / 10e5).toFixed(2)} USDC` : 'Loading...'}
                         </span>
                       </div>
+                      {balanceData && Number(balanceData.value) == 0 && (
+                        <div
+                          className={`flex items-center justify-between text-sm cursor-pointer hover:opacity-80 ${(isClaiming || hasClaimedEth) ? 'opacity-50' : ''}`}
+                          onClick={claimETHFaucet}
+                        >
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Wallet className="h-3 w-3" /> ETH Faucet
+                          </span>
+                          <span className="font-medium text-primary">
+                            {hasClaimedEth ? 'Claimed' : 'Claim'}
+                          </span>
+                        </div>
+                      )}
+
+                      {erc20Amount !== undefined && Number(erc20Amount) == 0 && (
+                        <div
+                          className={`flex items-center justify-between text-sm cursor-pointer hover:opacity-80 ${(isClaiming || !canClaimTokens) ? 'opacity-50' : ''}`}
+                          onClick={claimUSDCFaucet}
+                        >
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            USDC Faucet
+                          </span>
+                          <span className="font-medium text-primary">
+                            {!canClaimTokens ? 'Cooldown' : 'Claim'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
