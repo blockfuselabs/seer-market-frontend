@@ -198,6 +198,13 @@ export default function Header() {
                   </>
                 ) : null}
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/wallet">
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Manage Wallet
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
