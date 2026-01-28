@@ -19,9 +19,9 @@ export function WalletBalance() {
 
     if (!authenticated) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-3xl bg-black/20 backdrop-blur-xl text-center space-y-3">
-                <Wallet className="h-8 w-8 text-white/50" />
-                <p className="text-sm text-white/50">Connect wallet to view portfolio</p>
+            <div className="flex flex-col items-center justify-center p-8 border border-border/10 rounded-3xl bg-secondary/20 backdrop-blur-xl text-center space-y-3">
+                <Wallet className="h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Connect wallet to view portfolio</p>
             </div>
         )
     }
@@ -66,9 +66,9 @@ export function WalletBalance() {
                 <div className="flex items-center justify-between px-1">
                     <h3 className="text-sm font-medium text-muted-foreground">Assets</h3>
                 </div>
-                <div className="rounded-3xl border border-white/5 bg-black/40 backdrop-blur-xl overflow-hidden shadow-sm">
+                <div className="rounded-3xl border border-border/10 bg-white/40 dark:bg-black/40 backdrop-blur-xl overflow-hidden shadow-sm dark:border-white/5">
                     <AssetRow
-                        icon={<div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-lg">Ξ</div>}
+                        icon={<div className="h-10 w-10 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-lg">Ξ</div>}
                         name="Ethereum"
                         symbol="ETH"
                         amount={ethBalance?.value ? formatEther(ethBalance.value) : "0.0000"}
@@ -76,9 +76,9 @@ export function WalletBalance() {
                         change="+2.4%"
                         isLoading={isLoadingEth}
                     />
-                    <div className="h-[1px] bg-white/5 mx-4" />
+                    <div className="h-[1px] bg-border/5 dark:bg-white/5 mx-4" />
                     <AssetRow
-                        icon={<div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-lg">$</div>}
+                        icon={<div className="h-10 w-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg">$</div>}
                         name="USD Coin"
                         symbol="USDC"
                         amount={usdcBalance.formatted}
@@ -102,12 +102,12 @@ function AssetRow({ icon, name, symbol, amount, value, change, isLoading }: {
     isLoading: boolean
 }) {
     return (
-        <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+        <div className="flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group">
             <div className="flex items-center gap-4">
                 {icon}
                 <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">{name}</span>
-                    <span className="text-xs text-white/50">{symbol}</span>
+                    <span className="text-sm font-semibold text-foreground dark:text-white/90 transition-colors">{name}</span>
+                    <span className="text-xs text-muted-foreground dark:text-white/50">{symbol}</span>
                 </div>
             </div>
             <div className="flex items-center gap-6">
@@ -117,10 +117,10 @@ function AssetRow({ icon, name, symbol, amount, value, change, isLoading }: {
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : (
                         <>
-                            <span className="text-sm font-bold text-white/90">{amount}</span>
+                            <span className="text-sm font-bold text-foreground dark:text-white/90">{amount}</span>
                             <div className="flex items-center gap-1.5">
-                                <span className="text-xs text-white/50">{value}</span>
-                                <span className="text-xs text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">{change}</span>
+                                <span className="text-xs text-muted-foreground dark:text-white/50">{value}</span>
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">{change}</span>
                             </div>
                         </>
                     )}
