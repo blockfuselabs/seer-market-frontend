@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { isAddress } from "viem"
+import { isAddress, parseEther, parseUnits, erc20Abi } from "viem"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -22,7 +22,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { ArrowRight, Loader2, Send } from "lucide-react"
+import { ArrowRight, Loader2 } from "lucide-react"
+import { useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
+import { USDC_ADDRESS } from "@/lib/constants"
+import { toast } from "sonner"
 
 const formSchema = z.object({
     recipient: z.string().refine((val) => isAddress(val), {
@@ -35,7 +38,19 @@ const formSchema = z.object({
 })
 
 export function TransferForm() {
-    const [isLoading, setIsLoading] = useState(false)
+    // ETH Transfer
+    const { sendTransactionAsync, isPending: isEthPending } = useSendTransaction()
+
+    // USDC Transfer
+    const { writeContractAsync, isPending: isUsdcPending } = useWriteContract()
+
+    const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
+
+    const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+        hash: txHash,
+    })
+
+    const isLoading = isEthPending || isUsdcPending || isConfirming
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,13 +61,32 @@ export function TransferForm() {
         },
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        setIsLoading(true)
-        setTimeout(() => {
-            console.log("Transferring:", values)
-            setIsLoading(false)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        try {
+            let hash: `0x${string}`
+
+            if (values.token === "ETH") {
+                hash = await sendTransactionAsync({
+                    to: values.recipient as `0x${string}`,
+                    value: parseEther(values.amount),
+                })
+            } else {
+                hash = await writeContractAsync({
+                    address: USDC_ADDRESS as `0x${string}`,
+                    abi: erc20Abi,
+                    functionName: 'transfer',
+                    args: [values.recipient as `0x${string}`, parseUnits(values.amount, 6)], // USDC has 6 decimals
+                })
+            }
+
+            setTxHash(hash)
+            toast.success(`Transaction submitted: ${hash.slice(0, 6)}...${hash.slice(-4)}`)
             form.reset()
-        }, 2000)
+
+        } catch (error) {
+            console.error(error)
+            toast.error("Transaction failed. Check console for details.")
+        }
     }
 
     return (

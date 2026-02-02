@@ -1,21 +1,62 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { useBalance } from "wagmi"
-import { formatEther } from "viem"
-import { Loader2, TrendingUp, Wallet, ArrowUpRight, ArrowDownLeft, MoreHorizontal } from "lucide-react"
+import { useBalance, useReadContract } from "wagmi"
+import { formatEther, formatUnits, erc20Abi } from "viem"
+import { Loader2, TrendingUp, Wallet, ArrowUpRight, ArrowDownLeft, Copy, Check } from "lucide-react"
 import { usePrivy } from "@privy-io/react-auth"
+import { USDC_ADDRESS } from "@/lib/constants"
+import { QRCodeSVG } from "qrcode.react"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 export function WalletBalance() {
     const { user, authenticated } = usePrivy()
     const address = user?.wallet?.address as `0x${string}` | undefined
+    const [copied, setCopied] = useState(false)
 
+    // ETH Balance
     const { data: ethBalance, isLoading: isLoadingEth } = useBalance({
         address,
     })
 
-    const isLoadingUsdc = false
-    const usdcBalance = { formatted: "0.00", symbol: "USDC", value: BigInt(0) }
+    // USDC Balance
+    const { data: usdcData, isLoading: isLoadingUsdc } = useReadContract({
+        address: USDC_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: address ? [address] : undefined,
+        query: {
+            enabled: !!address
+        }
+    })
+
+    const usdcFormatted = usdcData ? formatUnits(usdcData, 6) : "0.00"
+
+    // Mock Prices (In a real app, fetch from an API)
+    const ethPrice = 3200 // Mock ETH Price
+    const usdcPrice = 1   // Stablecoin
+
+    const totalValue = (
+        (Number(ethBalance?.formatted || 0) * ethPrice) +
+        (Number(usdcFormatted) * usdcPrice)
+    ).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+
+    const copyAddress = () => {
+        if (address) {
+            navigator.clipboard.writeText(address)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        }
+    }
 
     if (!authenticated) {
         return (
@@ -40,7 +81,7 @@ export function WalletBalance() {
                         <div>
                             <p className="text-white/80 text-sm font-medium mb-1">Total Balance</p>
                             <h2 className="text-4xl font-bold tracking-tight">
-                                $0.00
+                                {totalValue}
                             </h2>
                         </div>
                         <div className="p-2 bg-white/10 rounded-full backdrop-blur-md">
@@ -49,10 +90,36 @@ export function WalletBalance() {
                     </div>
 
                     <div className="flex gap-4 mt-8">
-                        <button className="flex-1 bg-white text-fuchsia-900 py-2.5 px-4 rounded-xl font-semibold text-sm hover:bg-white/90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/10">
-                            <ArrowDownLeft className="h-4 w-4" />
-                            Deposit
-                        </button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <button className="flex-1 bg-white text-fuchsia-900 py-2.5 px-4 rounded-xl font-semibold text-sm hover:bg-white/90 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/10">
+                                    <ArrowDownLeft className="h-4 w-4" />
+                                    Deposit
+                                </button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md bg-zinc-950 border-white/10 text-white">
+                                <DialogHeader>
+                                    <DialogTitle>Deposit Assets</DialogTitle>
+                                    <DialogDescription className="text-zinc-400">
+                                        Scan the QR code or copy the address below to deposit funds.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="flex flex-col items-center justify-center py-6 space-y-6">
+                                    <div className="p-4 bg-white rounded-xl">
+                                        <QRCodeSVG value={address || ""} size={180} />
+                                    </div>
+                                    <div className="flex items-center space-x-2 w-full max-w-[300px]">
+                                        <div className="flex-1 bg-zinc-900 p-3 rounded-lg text-xs font-mono text-zinc-400 truncate border border-white/5">
+                                            {address}
+                                        </div>
+                                        <Button size="icon" variant="outline" className="border-white/10 hover:bg-white/5" onClick={copyAddress}>
+                                            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+
                         <button className="flex-1 bg-black/20 text-white py-2.5 px-4 rounded-xl font-semibold text-sm hover:bg-black/30 backdrop-blur-md transition-colors flex items-center justify-center gap-2">
                             <ArrowUpRight className="h-4 w-4" />
                             Send
@@ -71,9 +138,8 @@ export function WalletBalance() {
                         icon={<div className="h-10 w-10 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-lg">Ξ</div>}
                         name="Ethereum"
                         symbol="ETH"
-                        amount={ethBalance?.value ? formatEther(ethBalance.value) : "0.0000"}
-                        value="$0.00"
-                        change="+2.4%"
+                        amount={ethBalance?.value ? Number(formatEther(ethBalance.value)).toFixed(4) : "0.0000"}
+                        value={(Number(ethBalance?.formatted || 0) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                         isLoading={isLoadingEth}
                     />
                     <div className="h-[1px] bg-border/5 dark:bg-white/5 mx-4" />
@@ -81,9 +147,8 @@ export function WalletBalance() {
                         icon={<div className="h-10 w-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-lg">$</div>}
                         name="USD Coin"
                         symbol="USDC"
-                        amount={usdcBalance.formatted}
-                        value="$0.00"
-                        change="+0.1%"
+                        amount={usdcFormatted}
+                        value={(Number(usdcFormatted) * usdcPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                         isLoading={isLoadingUsdc}
                     />
                 </div>
@@ -92,13 +157,12 @@ export function WalletBalance() {
     )
 }
 
-function AssetRow({ icon, name, symbol, amount, value, change, isLoading }: {
+function AssetRow({ icon, name, symbol, amount, value, isLoading }: {
     icon: React.ReactNode,
     name: string,
     symbol?: string,
     amount?: string,
     value: string,
-    change: string,
     isLoading: boolean
 }) {
     return (
@@ -111,17 +175,13 @@ function AssetRow({ icon, name, symbol, amount, value, change, isLoading }: {
                 </div>
             </div>
             <div className="flex items-center gap-6">
-                {/* Sparkline placeholder could go here */}
                 <div className="flex flex-col items-end gap-0.5">
                     {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                     ) : (
                         <>
                             <span className="text-sm font-bold text-foreground dark:text-white/90">{amount}</span>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-xs text-muted-foreground dark:text-white/50">{value}</span>
-                                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded">{change}</span>
-                            </div>
+                            <span className="text-xs text-muted-foreground dark:text-white/50">{value}</span>
                         </>
                     )}
                 </div>

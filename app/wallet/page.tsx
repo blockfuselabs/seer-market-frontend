@@ -1,6 +1,5 @@
 import { WalletBalance } from "@/components/wallet/wallet-balance"
 import { TransferForm } from "@/components/wallet/transfer-form"
-import { TransactionHistory } from "@/components/wallet/transaction-history"
 import Header from "@/components/layout/header"
 // import { Header } from "@/components/layout/header" // Assuming Header is in this path
 
@@ -20,10 +19,6 @@ export default function WalletPage() {
 
                     <div className="md:col-span-5">
                         <TransferForm />
-                    </div>
-
-                    <div className="md:col-span-7">
-                        <TransactionHistory />
                     </div>
                 </div>
             </div>
