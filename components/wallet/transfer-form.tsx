@@ -4,7 +4,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { isAddress, parseEther, parseUnits, erc20Abi } from "viem"
+import { isAddress, parseEther, parseUnits, erc20Abi, encodeFunctionData } from "viem"
+import { baseSepolia } from "wagmi/chains"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -23,7 +24,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { ArrowRight, Loader2 } from "lucide-react"
-import { useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
+import { useWaitForTransactionReceipt } from "wagmi"
+import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth"
 import { USDC_ADDRESS } from "@/lib/constants"
 import { toast } from "sonner"
 
@@ -40,19 +42,21 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 export function TransferForm() {
-    // ETH Transfer
-    const { sendTransactionAsync, isPending: isEthPending } = useSendTransaction()
+    const { authenticated, user, login } = usePrivy()
+    const { wallets } = useWallets()
+    const { sendTransaction } = useSendTransaction()
 
-    // USDC Transfer
-    const { writeContractAsync, isPending: isUsdcPending } = useWriteContract()
+    // Get the active wallet (usually the embedded one or first connected)
+    const wallet = wallets[0]
 
     const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const { isLoading: isConfirming } = useWaitForTransactionReceipt({
         hash: txHash,
     })
 
-    const isLoading = isEthPending || isUsdcPending || isConfirming
+    const isLoading = isSubmitting || isConfirming
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -64,21 +68,45 @@ export function TransferForm() {
     })
 
     async function onSubmit(values: FormValues) {
+        if (!authenticated) {
+            toast.info("Please connect your wallet first")
+            login()
+            return
+        }
+
+        if (!wallet) {
+            toast.error("Wallet not available")
+            return
+        }
+
         try {
+            setIsSubmitting(true)
             let hash: `0x${string}`
 
             if (values.token === "ETH") {
-                hash = await sendTransactionAsync({
+                const txReceipt = await sendTransaction({
                     to: values.recipient as `0x${string}`,
                     value: parseEther(values.amount),
+                    chainId: baseSepolia.id
+                }, {
+                    address: wallet.address as `0x${string}` // Optional, but good practice if multiple wallets
                 })
+                hash = txReceipt.hash as `0x${string}`
             } else {
-                hash = await writeContractAsync({
-                    address: USDC_ADDRESS as `0x${string}`,
+                const data = encodeFunctionData({
                     abi: erc20Abi,
                     functionName: 'transfer',
-                    args: [values.recipient as `0x${string}`, parseUnits(values.amount, 6)], // USDC has 6 decimals
+                    args: [values.recipient as `0x${string}`, parseUnits(values.amount, 6)],
                 })
+
+                const txReceipt = await sendTransaction({
+                    to: USDC_ADDRESS as `0x${string}`,
+                    data: data,
+                    chainId: baseSepolia.id
+                }, {
+                    address: wallet.address as `0x${string}`
+                })
+                hash = txReceipt.hash as `0x${string}`
             }
 
             setTxHash(hash)
@@ -88,6 +116,8 @@ export function TransferForm() {
         } catch (error) {
             console.error(error)
             toast.error("Transaction failed. Check console for details.")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
