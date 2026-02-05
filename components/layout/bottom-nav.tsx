@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, PlusCircle } from "lucide-react"
+import { Home, PlusCircle, Wallet } from "lucide-react"
 import { motion } from "framer-motion"
 
 import { useUserRights } from "@/hooks/useUserRights"
@@ -24,6 +24,12 @@ export function BottomNav() {
             label: "Create",
             icon: PlusCircle,
             show: isConnected && hasCreationRights
+        },
+        {
+            href: "/wallet",
+            label: "Wallet",
+            icon: Wallet,
+            show: true
         }
     ]
 
